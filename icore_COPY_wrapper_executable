@@ -61,11 +61,8 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		echo err1
 		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
-		echo err2
 		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
-		echo done with errs
 		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
 	
 		#========================================================================
@@ -73,22 +70,14 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
 		# This should run concurrently/in parallel
 		echo Running ICORE for $RadecID
-	
-	        #TODO: output error message if this doesnt execute!
-		echo running ICORE for bands 1 and 2 in PARALLEL
-		(source ${wrapperDir}/icore_coadd_w1 |& tee ${OUTPUTdir}/wrapper_w1_output.txt) & 
-		(source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt) & 
-		wait
+		
+		#echo running ICORE for bands 1 and 2 in PARALLEL
+		(((source ${wrapperDir}/icore_coadd_w1 |& tee ${OUTPUTdir}/icore_w1_output.txt) & (source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/icore_w2_output.txt) &) ; ${wrapperDir}/mdet -image1 ${OUTPUTdir}/mosaic-w1-int.fits -image2 ${OUTPUTdir}/mosaic-w2-int.fits -sigimage1 ${OUTPUTdir}/mosaic-w1-unc.fits -sigimage2 ${OUTPUTdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${OUTPUTdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 |& tee ${OUTPUTdir}/medt_output.txt &) &	
 
-		#echo running ICORE for bands 1 and 2 in GNU PARALLEL
-		#parallel ::: 'source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt' 'source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt' 
-		#(echo '"source '$wrapperDir'/icore_coadd_w1 |& tee '$OUTPUTdir'/wrapper_w1_output.txt"' ; echo '"source '$wrapperDir'/icore_coadd_w2 |& tee '$OUTPUTdir'/wrapper_w2_output.txt\"') | parallel
-		#echo done with GNU parallel		
-	
-		#TODO run in parallel! Fix the background not closing problem
-		#echo running ICORE for bands 1 and 2 in SERIES
-		#(source ${wrapperDir}/icore_coadd_w1 |& tee "$OUTPUTdir"/wrapper_w1_output.txt)   
-		#(source ${wrapperDir}/icore_coadd_w2 |& tee "$OUTPUTdir"/wrapper_w2_output.txt) 
+		# with Masks	
+		#${wrapperDir}/mdet -image1 ${OUTPUTdir}/mosaic-w1-int.fits -image2 ${OUTPUTdir}/mosaic-w2-int.fits -sigimage1 ${OUTPUTdir}/mosaic-w1-unc.fits -sigimage2 ${OUTPUTdir}/mosaic-w2-unc.fits -cmask1 ${OUTPUTdir}/1124p045_ac51-w1-cmsk-3.fits -cmask2 ${OUTPUTdir}1124p045_ac51-w2-cmsk-3.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${OUTPUTdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 	
+		
+		echo MDET for ${RadecID} done!
 		
 		echo ICORE for $RadecID done!	
 		echo "---------- end ICORE wrapper ----------"
@@ -96,7 +85,13 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo ============= end ICORE wrapper loop iteration =============
 	end
 end
+
+echo waiting for all background processes to end...
+ps -al
+wait
+
 #========================================================================
+
 		
 # Deletes and cleans up files
 cd $wrapperDir
@@ -108,47 +103,3 @@ echo Done deleting!
 
 #Program finished!
 echo ICORE wrapper finished! Ending program now.
-
-
-#========================================================================
-#MDET Wrapper
-
-echo MDET wrapper starting...
-
-foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper
-	
-	foreach RadecIDDir ($RaRaRaDir*/)
-	
-		echo ============= start MDET wrapper loop iteration  =============
-
-		set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
-		@ tempIndex = ($tempSize - 8)
-		set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
-		set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
-	
-		echo $RadecIDDir
-		echo "RaRaRa == "$RaRaRa
-		echo "RadecID == "$RadecID
-	
-		echo "---------- start MDET wrapper ----------"
-		
-		set MDETInputdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
-		echo MDET Input Dir === $MDETInputdir
-		
-		#============================================================================
-		
-		echo calling MDET on ${RadecID} tile
-			
-		# MDET call
-		${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 	
-		
-		# with Masks	
-		#${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -cmask1 ${MDETInputdir}/1124p045_ac51-w1-cmsk-3.fits -cmask2 ${MDETInputdir}1124p045_ac51-w2-cmsk-3.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 	
-		
-		echo MDET for ${RadecID} done!
-		
-		echo "---------- end MDET wrapper ----------"
-		
-		echo ============= end MDET wrapper loop iteration =============
-	end
-end

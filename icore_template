@@ -13,8 +13,12 @@ set psf_list_file = ${InputsDir}/Lists/PSFs_list_w${band}.txt
 set int_list_file = ${InputsDir}/Lists/img_list_w${band}.txt
 set unc_list_file = ${InputsDir}/Lists/unc_list_w${band}.txt
 
-# NOTE: this extraction that ALL files follow the same format. Please name files accordingly.
+# NOTE: this extraction assumes that ALL files follow the same format. Please name files accordingly.
 # This will delete the previous list files. They will be deleted b/c they take up unnecessary space.
+
+#below will take the psf out of each tile... if its the same psf, can't we just have the psf in the ONE folder? vvv
+#find ${OUTPUTdir} -type f | grep unWISE-w${band}-psf-wpro-01x01-01x01.fits  > ${psf_list_file}
+#find ${OUTPUTdir} -type f | grep w${band}-psf-  > ${psf_list_file}
 find ${INPUTdir} -type f | grep w${band}-psf-  > ${psf_list_file}
 find ${INPUTdir} -type f | grep w${band}-img-u > ${int_list_file}
 find ${INPUTdir} -type f | grep w${band}-std-u > ${unc_list_file}
