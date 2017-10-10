@@ -8,11 +8,13 @@ echo Wrapper Started at:
 echo $startTime
 echo
 echo This Wrapper will wrap around and run these 3 programs:
-echo 1\) ICORE
-echo 2\) MDET
-#echo 3\) WPHOTPMC
+#echo This Wrapper will wrap around and run these 4 programs:
+echo 1\) fbt3 and PSFavr8
+echo 2\) ICORE
+echo 3\) MDET
+#echo 4\) WPHOTPMC
 #echo ================================================================================================================
-#echo WARNING\: Elijah is doing testing\/editing to this program \(Aug 29 2017\). This script will not work propperly.
+#echo WARNING\: Elijah is doing testing\/editing to this program \(Oct10 2017\). This script will not work propperly.
 #echo ================================================================================================================
 if ($# != 2) then
 	echo ERROR not enough arguments:
@@ -51,7 +53,75 @@ echo Wrapper now starting...
 
 echo
 echo
-echo 1\) ICORE programs now starting...
+
+#===============================================================================================================================================================
+#fbt3 and PSFavr8 Wrapper
+
+echo
+echo
+echo 1\) fbt3 and PSFavr8 programs now starting...
+
+#TESTING
+#while
+foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
+	
+	foreach RadecIDDir ($RaRaRaDir*/)
+	
+		echo =============================== start fbt3 and PSFavr8  wrapper loop iteration =================================
+ 
+		set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
+		@ tempIndex = ($tempSize - 8)
+		set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
+		set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
+	
+		echo $RadecIDDir
+		echo "RaRaRa == "$RaRaRa
+		echo "RadecID == "$RadecID
+	
+		echo "--------------------------------------- start fbt3 and PSFavr8 wrapper ---------------------------------------"
+		
+		set preworkInputdir = ${InputsDir}/${RaRaRa}/${RadecID}/Full/
+		echo fbt3 and PSFavr8 Input Dir === $preworkInputdir
+		#set OUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+
+		echo calling fbt3 and PSFavr8 on ${RadecID} tile
+		
+		#TODO make dir for Full, asc, dec	
+		#mkdir -p
+ 
+		
+		# fbt3 call
+		#/Volumes/CatWISE1/jwf/src/fbt3/fbt3 unwise-0657p151-w1-frames.fits w1.txt
+		#/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8fbt3 unwise-0657p151-w2-frames.fits w2.txt
+		
+		#PSFavr8
+		#/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i -o -a1 -a2 -t $RadecID -da
+		
+		#TODO remove the files created by fbt3
+
+		#Stops calling programs if number of scripts running is greater than number of threads on CPU
+                while(`ps -ef | grep mdet | wc -l` > 12)
+                        #echo IM WATING
+			#do nothing
+                end
+		
+		echo fbt3 and PSFavr8 for ${RadecID} done!
+		
+		echo "---------------------------------------- end fbt3 and PSFavr8 wrapper ----------------------------------------"
+		echo ================================ end fbt3 and PSFavr8 wrapper loop iteration =================================
+	end
+end
+
+#===============================================================================================================================================================
+
+#wait for background processes to finish
+wait
+echo fbt3 and PSFavr8 wrapper finished!
+echo
+
+#===============================================================================================================================================================
+
+echo 2\) ICORE programs now starting...
 
 foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
 	
@@ -127,7 +197,7 @@ echo
 
 echo
 echo
-echo 2\) MDET programs now starting...
+echo 3\) MDET programs now starting...
 
 foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
 	
@@ -182,7 +252,7 @@ echo
 
 #echo
 #echo
-#echo 3\) WPHOTPMC programs now starting...
+#echo 4\) WPHOTPMC programs now starting...
 
 #foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
 	
