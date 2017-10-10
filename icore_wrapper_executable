@@ -1,7 +1,19 @@
 #! /bin/tcsh -f
 
-#============================================================================	
+#===============================================================================================================================================================
 
+set startTime = `date '+%m/%d/%Y %H:%M:%S'`
+echo 
+echo Wrapper Started at:
+echo $startTime
+echo
+echo This Wrapper will wrap around and run these 3 programs:
+echo 1\) ICORE
+echo 2\) MDET
+#echo 3\) WPHOTPMC
+#echo ================================================================================================================
+#echo WARNING\: Elijah is doing testing\/editing to this program \(Aug 29 2017\). This script will not work propperly.
+#echo ================================================================================================================
 if ($# != 2) then
 	echo ERROR not enough arguments:
 	echo "Please list Input Directory and Output Directory as your 1st and 2nd argument, respectively." && exit 
@@ -24,8 +36,7 @@ set OutputsDir = $2
 
 set wrapperDir = $PWD
 
-#============================================================================
-		
+#===============================================================================================================================================================	
 # links parent and wrapper dir to run "tcsh" and "source SORUCEME" in parent dir
 # this assumes tcsh is installed
 echo Creating temp files...
@@ -36,11 +47,17 @@ tcsh & source SOURCEME && cd $wrapperDir
 
 set FulldepthDir = ${InputsDir}/Fulldepth/
 
-foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper
+echo Wrapper now starting...
+
+echo
+echo
+echo 1\) ICORE programs now starting...
+
+foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
 	
 	foreach RadecIDDir ($RaRaRaDir*/)
 
-		echo ============= start ICORE wrapper loop iteration =============
+		echo ===================================== start ICORE wrapper loop iteration =====================================
 
 		set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
 		@ tempIndex = ($tempSize - 8)
@@ -50,35 +67,32 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo "RaRaRa == "$RaRaRa
 		echo "RadecID == "$RadecID
 	
-		echo "---------- start ICORE wrapper ----------"
+		echo "-------------------------------------------- start ICORE wrapper ---------------------------------------------"
 		
 		set INPUTdir = ${FulldepthDir}${RaRaRa}/${RadecID}/
 		set OUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		
 		echo Current Input Directory === $INPUTdir
 		echo Current Output Directory === $OUTPUTdir
 		mkdir -p $OUTPUTdir
-		#============================================================================
+		mkdir -p ${OUTPUTdir}/ProgramTerminalOutput/
+		#===============================================================================================================================================
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		echo err1
 		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
-		echo err2
 		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
-		echo done with errs
 		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
 	
-		#========================================================================
-		
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
 		# This should run concurrently/in parallel
 		echo Running ICORE for $RadecID
 	
 	        #TODO: output error message if this doesnt execute!
-		echo running ICORE for bands 1 and 2 in PARALLEL
-		(source ${wrapperDir}/icore_coadd_w1 |& tee ${OUTPUTdir}/wrapper_w1_output.txt) & 
-		(source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt) & 
-		wait
+		echo Running ICORE for bands 1 and 2 in PARALLEL
+		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
+		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
+#		wait
 
 		#echo running ICORE for bands 1 and 2 in GNU PARALLEL
 		#parallel ::: 'source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt' 'source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt' 
@@ -89,38 +103,38 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		#echo running ICORE for bands 1 and 2 in SERIES
 		#(source ${wrapperDir}/icore_coadd_w1 |& tee "$OUTPUTdir"/wrapper_w1_output.txt)   
 		#(source ${wrapperDir}/icore_coadd_w2 |& tee "$OUTPUTdir"/wrapper_w2_output.txt) 
-		
+	
+		#Stops calling programs if number of scripts running is greater than number of threads on CPU
+		while(`ps -ef | grep icore_coadd_w | wc -l` > 12)
+                	#do nothing
+        	end
+			
 		echo ICORE for $RadecID done!	
-		echo "---------- end ICORE wrapper ----------"
+		echo "--------------------------------------------- end ICORE wrapper ----------------------------------------------"
 		
-		echo ============= end ICORE wrapper loop iteration =============
+		echo ====================================== end ICORE wrapper loop iteration ======================================
 	end
 end
-#========================================================================
-		
-# Deletes and cleans up files
-cd $wrapperDir
-echo Deleting temp files...
-source icore_cleanup_wrapper
-echo Done deleting!
+#===============================================================================================================================================================
 
-#========================================================================
+#wait for background processes to finish
+wait
+echo ICORE wrapper finished!
+echo
 
-#Program finished!
-echo ICORE wrapper finished! Ending program now.
-
-
-#========================================================================
+#===============================================================================================================================================================
 #MDET Wrapper
 
-echo MDET wrapper starting...
+echo
+echo
+echo 2\) MDET programs now starting...
 
-foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper
+foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
 	
 	foreach RadecIDDir ($RaRaRaDir*/)
 	
-		echo ============= start MDET wrapper loop iteration  =============
-
+		echo ===================================== start MDET wrapper loop iteration ======================================
+ 
 		set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
 		@ tempIndex = ($tempSize - 8)
 		set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
@@ -130,25 +144,121 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo "RaRaRa == "$RaRaRa
 		echo "RadecID == "$RadecID
 	
-		echo "---------- start MDET wrapper ----------"
+		echo "--------------------------------------------- start MDET wrapper ---------------------------------------------"
 		
 		set MDETInputdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
 		echo MDET Input Dir === $MDETInputdir
 		
-		#============================================================================
-		
 		echo calling MDET on ${RadecID} tile
 			
 		# MDET call
-		${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 	
+		(${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 >& ${MDETInputdir}/ProgramTerminalOutput/mdet_output.txt) &	
 		
-		# with Masks	
+		# MDET with Masks	
 		#${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -cmask1 ${MDETInputdir}/1124p045_ac51-w1-cmsk-3.fits -cmask2 ${MDETInputdir}1124p045_ac51-w2-cmsk-3.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 	
+		
+		#Stops calling programs if number of scripts running is greater than number of threads on CPU
+                while(`ps -ef | grep mdet | wc -l` > 12)
+                        #echo IM WATING
+			#do nothing
+                end
 		
 		echo MDET for ${RadecID} done!
 		
-		echo "---------- end MDET wrapper ----------"
-		
-		echo ============= end MDET wrapper loop iteration =============
+		echo "---------------------------------------------- end MDET wrapper ----------------------------------------------"
+		echo ====================================== end MDET wrapper loop iteration =======================================
 	end
 end
+
+#===============================================================================================================================================================
+
+#wait for background processes to finish
+wait
+echo MDET wrapper finished!
+echo
+ 
+#===============================================================================================================================================================
+#WPHOTPMC Wrapper
+
+#echo
+#echo
+#echo 3\) WPHOTPMC programs now starting...
+
+#foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
+	
+#	foreach RadecIDDir ($RaRaRaDir*/)
+	
+#		echo ===================================== start WPHOTPMC wrapper loop iteration ======================================
+ 
+#		set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
+#		@ tempIndex = ($tempSize - 8)
+#		set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
+#		set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
+	
+#		echo $RadecIDDir
+#		echo "RaRaRa == "$RaRaRa
+#		echo "RadecID == "$RadecID
+	
+#		echo "--------------------------------------------- start WPHOTPMC wrapper ---------------------------------------------"
+		
+#		set MDETInputdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		#set EpochsFramesList = ${OutputsDir}/${RaRaRa}/${RadecID}/frames.list.tbl
+		#set PSFdir = ${OutputsDir}/${RaRaRa}/${RadecID}/PSFs/
+		#set Coadddir = ${OutputsDir}/${RaRaRa}/${RadecID}/Coadds/
+#		echo MDET Input Dir === $MDETInputdir
+		
+#		echo calling WPHOTPMC on ${RadecID} tile
+	
+		#WPHOTPMC call
+#		set editedMDETInputdir = `echo $MDETInputdir | sed 's/\//\\\//g'`
+		#changes MDET output location
+#		sed -i --follow-symlinks "16s/.*.*/set mdetfile = ${editedMDETInputdir}detlist.tbl/g" ${wrapperDir}/run_wphotpmc.csh
+		#changes frames list	
+#		sed -i --follow-symlinks "20s/.*.*/set flist = ${editedMDETInputdir}frames\/frames.list_unwise.tbl/g" ${wrapperDir}/run_wphotpmc.csh	
+		#changes PSFs dir
+#		sed -i --follow-symlinks "34s/.*.*/set psfdir = ${editedMDETInputdir}/g" ${wrapperDir}/run_wphotpmc.csh	
+		#changes coadds list
+#		sed -i --follow-symlinks "41s/.*.*/set cname = ${editedMDETInputdir}mosiac/g" ${wrapperDir}/run_wphotpmc.csh
+		#changes QA output dir
+#                sed -i --follow-symlinks "48s/.*.*/set outQAdir = ${editedMDETInputdir}QAOutputWPHOTPMC/g" ${wrapperDir}/run_wphotpmc.csh
+	        #changes WPHOTPMC output dir
+#                sed -i --follow-symlinks "53s/.*.*/set outdir = ${editedMDETInputdir}OutputWPHOTPMC/g" ${wrapperDir}/run_wphotpmc.csh
+	        #changes WPHOTPMC terminal output file name
+#                sed -i --follow-symlinks "58s/.*.*/set terminaloutname = ${editedMDETInputdir}ProgramTerminalOutput\/wphotpmc_output.txt/g" ${wrapperDir}/run_wphotpmc.csh
+			
+		# run WPHOTPMC
+		#${wrapperDir}/run_wphotpmc.csh
+		
+		#Stops calling programs if number of scripts running is greater than number of threads on CPU
+ #               while(`ps -ef | grep wphot | wc -l` > 12)
+                        #do nothing
+ #               end
+		
+#		echo WPHOTPMC for ${RadecID} done!
+		
+		echo "---------------------------------------------- end WPHOTPMC wrapper ----------------------------------------------"
+		echo ====================================== end WPHOTPMC wrapper loop iteration =======================================
+	end
+end
+#===============================================================================================================================================================
+
+#wait for background processes to finish
+#wait
+#echo WPHOT wrapper finished!
+#echo
+#===============================================================================================================================================================
+		
+# Deletes and cleans up files
+cd $wrapperDir
+echo Deleting Wrapper temp files...
+source icore_cleanup_wrapper
+echo Done deleting!
+
+
+#===============================================================================================================================================================
+echo Wrapper finished!
+set endTime = `date '+%m/%d/%Y %H:%M:%S'`
+echo
+echo Wrapper Ended at:
+echo $endTime
+echo
