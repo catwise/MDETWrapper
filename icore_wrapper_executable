@@ -2,6 +2,7 @@
 
 #===============================================================================================================================================================
 
+set wrapperDir = $PWD
 set startTime = `date '+%m/%d/%Y %H:%M:%S'`
 echo 
 echo Wrapper Started at:
@@ -16,28 +17,39 @@ echo 3\) MDET
 #echo ================================================================================================================
 #echo WARNING\: Elijah is doing testing\/editing to this program \(Oct10 2017\). This script will not work propperly.
 #echo ================================================================================================================
-if ($# != 2) then
-	echo ERROR not enough arguments:
-	echo "Please list Input Directory and Output Directory as your 1st and 2nd argument, respectively." && exit 
-else 
-	set InputsDir = $1
-	set OutputsDir = $2
+if ($# != 3) then
+	echo "ERROR not enough arguments:"
+	echo "Parameters for wrapper must be in the order:"
+	echo 1\) Option 1 or 2 \(1 == Input directory, 2 == Input list\)
+	echo 2\) Input directory or list
+	echo 3\) Output directory 
+	echo "i.e. 'icore_wrapper_executable option InputDir/List OutputDir'" 
+	echo Exiting...
+	exit 
+else if ($1 == 1) then
+	set InputsDir = $2
+	set OutputsDir = $3
 	echo Inputs directory ==  $InputsDir
 	echo Outputs directory == $OutputsDir
 	echo "Are these the correct input and output directories? (y/n)"
 	set userInput = $<
 	if($userInput != "Y" && $userInput != "y") then
-		echo Please execute program again with full Input Directory path as the 1st parameter and the Ouput Directory as your 2nd parameter  
+		echo Please execute program again with full Input Directory path as the 2nd parameter and the Ouput Directory as your 3rd parameter  
 		exit
 	endif
+	goto Option1
+else if ($1 == 2) then
+	goto Option2
+else
+	echo ERROR option 1 or 2 not selected
+	echo Exiting...
+	exit
 endif
 
-# Sets input and output names
-set InputsDir = $1
-set OutputsDir = $2
 
-set wrapperDir = $PWD
 
+
+Option1:
 #===============================================================================================================================================================	
 # links parent and wrapper dir to run "tcsh" and "source SORUCEME" in parent dir
 # this assumes tcsh is installed
@@ -80,27 +92,34 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 	
 		echo "--------------------------------------- start fbt3 and PSFavr8 wrapper ---------------------------------------"
 		
-		set preworkInputdir = ${InputsDir}/${RaRaRa}/${RadecID}/Full/
+		set preworkINPUTdir = ${FulldepthDir}${RaRaRa}/${RadecID}/
 		echo fbt3 and PSFavr8 Input Dir === $preworkInputdir
-		#set OUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		set preworkOUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
 
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
 		#TODO make dir for Full, asc, dec	
-		#mkdir -p
+		#mkdir -p ${preworkOUTPUTdir}/Asce
+		#mkdir -p ${preworkOUTPUTdir}/Desc 
  
 		
 		# fbt3 call
-		#/Volumes/CatWISE1/jwf/src/fbt3/fbt3 unwise-0657p151-w1-frames.fits w1.txt
-		#/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8fbt3 unwise-0657p151-w2-frames.fits w2.txt
+		#/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${RadecID}_w1.txt &
+		#/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${RadecID}_w2.txt &
+		#wait
 		
 		#PSFavr8
-		#/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i -o -a1 -a2 -t $RadecID -da
+		#/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da
 		
-		#TODO remove the files created by fbt3
+		echo Removing w1/w2 txt files created by fbt3
+		#rm w1.txt
+		#rm w2.txt
+			
+		#TODO  make sure the PSF input in icore_template matches with the output file name in psfavr8
+			
 
 		#Stops calling programs if number of scripts running is greater than number of threads on CPU
-                while(`ps -ef | grep mdet | wc -l` > 12)
+                while(`ps -ef | grep PSFavr8 | wc -l` > 12)
                         #echo IM WATING
 			#do nothing
                 end
@@ -317,7 +336,14 @@ end
 #echo WPHOT wrapper finished!
 #echo
 #===============================================================================================================================================================
-		
+goto Done
+
+Option2:
+echo HelloWorld
+goto Done
+
+
+Done:		
 # Deletes and cleans up files
 cd $wrapperDir
 echo Deleting Wrapper temp files...
