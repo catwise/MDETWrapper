@@ -93,7 +93,7 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo "--------------------------------------- start fbt3 and PSFavr8 wrapper ---------------------------------------"
 		
 		set preworkINPUTdir = ${FulldepthDir}${RaRaRa}/${RadecID}/
-		echo fbt3 and PSFavr8 Input Dir === $preworkInputdir
+		echo fbt3 and PSFavr8 Input Dir === $preworkINPUTdir
 		set preworkOUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
 
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
@@ -109,7 +109,7 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		wait
 		
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da &
 		
 		echo Removing w1/w2 txt files created by fbt3
 		rm w1.txt
