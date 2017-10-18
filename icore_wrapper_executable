@@ -99,21 +99,21 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
 		#TODO make dir for Full, asc, dec	
-		#mkdir -p ${preworkOUTPUTdir}/Asce
-		#mkdir -p ${preworkOUTPUTdir}/Desc 
+		mkdir -p ${preworkOUTPUTdir}/Asce
+		mkdir -p ${preworkOUTPUTdir}/Desc 
  
 		
 		# fbt3 call
-		#/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${RadecID}_w1.txt &
-		#/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${RadecID}_w2.txt &
-		#wait
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${RadecID}_w1.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${RadecID}_w2.txt &
+		wait
 		
 		#PSFavr8
-		#/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da
 		
 		echo Removing w1/w2 txt files created by fbt3
-		#rm w1.txt
-		#rm w2.txt
+		rm w1.txt
+		rm w2.txt
 			
 		#TODO  make sure the PSF input in icore_template matches with the output file name in psfavr8
 			
