@@ -17,15 +17,20 @@ echo 3\) MDET
 #echo ================================================================================================================
 #echo WARNING\: Elijah is doing testing\/editing to this program \(Oct10 2017\). This script will not work propperly.
 #echo ================================================================================================================
+
 if ($# != 3) then
-	echo "ERROR not enough arguments:"
+	#Error handling
+	#Too many or too little arguments	
+	echo "ERROR: not enough arguments:"
 	echo "Parameters for wrapper must be in the order:"
 	echo 1\) Option 1 or 2 \(1 == Input directory, 2 == Input list\)
 	echo 2\) Input directory or list
 	echo 3\) Output directory 
 	echo "i.e. 'icore_wrapper_executable option InputDir/List OutputDir'" 
+	echo 
 	echo Exiting...
 	exit 
+#Option1
 else if ($1 == 1) then
 	set InputsDir = $2
 	set OutputsDir = $3
@@ -33,15 +38,69 @@ else if ($1 == 1) then
 	echo Outputs directory == $OutputsDir
 	echo "Are these the correct input and output directories? (y/n)"
 	set userInput = $<
+	
+	#Error handling
+	#if user input dir wrong
 	if($userInput != "Y" && $userInput != "y") then
-		echo Please execute program again with full Input Directory path as the 2nd parameter and the Ouput Directory as your 3rd parameter  
+		echo Please execute program again with full Input Directory path as the 2nd parameter and the Ouput Directory path as your 3rd parameter  
+		#TODO actually throw an error instead of just outputing to stdout... output to stderr
+		echo
+		echo Exiting...	
 		exit
 	endif
+	#if directories dont exist, throw error
+	if(! -d $InputsDir) then  
+		echo ERROR: Input Directory $InputsDir doest not exist.
+		echo	
+		echo Exiting...
+		exit
+	endif
+	if (! -d $OutputsDir) then
+		echo ERROR: Output Directory $OutputsDir does not exist.
+		echo	
+		echo Exiting...
+		exit
+	endif
+	
 	goto Option1
+#Option2
 else if ($1 == 2) then
+	set InputsList = $2
+        set OutputsDir = $3
+        echo Inputs list ==  $InputsList
+        echo Outputs directory == $OutputsDir
+        echo "Is this the correct input list and output directory? (y/n)"
+        set userInput = $<
+ 	
+	#Error handling
+        #if user input dir wrong
+        if($userInput != "Y" && $userInput != "y") then
+                echo Please execute program again with full Input List file as the 2nd parameter and the Ouput Directory path as your 3rd parameter
+                #TODO actually throw an error instead of just outputing to stdout... output to stderr
+                echo
+                echo Exiting...
+                exit
+        endif
+        #if directories dont exist, throw error
+        if(! -f $InputsList) then
+                echo ERROR: Input List file $InputsDir doest not exist.
+                echo
+                echo Exiting...
+                exit
+        endif
+        if (! -d $OutputsDir) then
+                echo ERROR: Output Directory $OutputsDir does not exist.
+                echo
+                echo Exiting...
+                exit
+        endif
+
 	goto Option2
 else
+	#Error handling
+	#option 1/2 not second parameter. program exits.
 	echo ERROR option 1 or 2 not selected
+	echo
 	echo Exiting...
 	exit
 endif
