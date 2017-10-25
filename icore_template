@@ -17,7 +17,8 @@ set unc_list_file = ${InputsDir}/Lists/unc_list_w${band}.txt
 # This will delete the previous list files. They will be deleted b/c they take up unnecessary space.
 
 #below will take the psf out of each tile... if its the same psf, can't we just have the psf in the ONE folder? vvv
-find ${OUTPUTdir} -type f | grep unWISE-w${band}-psf-wpro-01x01-01x01.fits  > ${psf_list_file}
+find ${OUTPUTdir} -type f | grep unwise-w${band}-psf-awaic-01x01-01x01.fits  > ${psf_list_file}
+#find ${OUTPUTdir} -type f | grep unWISE-w${band}-psf-wpro-01x01-01x01.fits  > ${psf_list_file}
 #find ${OUTPUTdir} -type f | grep w${band}-psf-  > ${psf_list_file}
 #find ${INPUTdir} -type f | grep w${band}-psf-  > ${psf_list_file}
 
