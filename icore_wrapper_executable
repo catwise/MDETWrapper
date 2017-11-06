@@ -181,28 +181,37 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		mkdir -p ${preworkOUTPUTdir}/Desc 
  
 		#removes any existing psfs
-		rm -f ${OutputsDir}/${RaRaRa}/${RadecID}/Full/*psf*               
-		rm -f ${preworkOUTPUTdir}/Asce/*psf*
-		rm -f ${preworkOUTPUTdir}/Desc/*psf*
+		if (-f ${OutputsDir}/${RaRaRa}/${RadecID}/Full/*psf*) then
+			echo PSFs exist in ${OutputsDir}/${RaRaRa}/${RadecID}/Full/ 
+			echo Deleting PSF files now...
+			rm -f ${OutputsDir}/${RaRaRa}/${RadecID}/Full/*psf*               
+		else if (-f ${preworkOUTPUTdir}/Asce/*psf*) then 
+			echo PSFs exist in ${OutputsDir}/${RaRaRa}/${RadecID}/Full/Asce/ 
+			echo Deleting PSF files now...
+			rm -f ${preworkOUTPUTdir}/Asce/*psf*
+		else if (-f ${preworkOUTPUTdir}/Desc/*psf*) then 
+			echo PSFs exist in ${OutputsDir}/${RaRaRa}/${RadecID}/Full/Desc/ 
+			echo Deleting PSF files now...
+			rm -f ${preworkOUTPUTdir}/Desc/*psf*
 
 		# fbt3 call
 		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${RadecID}_w1.txt &
 		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${RadecID}_w2.txt &
-		wait
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
+		wait
 		#PSFavr8
 		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da &
 	        if ($status != 0) then
-		    echo PSFavr8 failedi with an exit status of $status. Exiting...
+		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		
 		echo Removing w1/w2 txt files created by fbt3
-		rm w1.txt
-		rm w2.txt
+		rm  ${RadecID}_w1.txt
+		rm  ${RadecID}_w2.txt
 			
 		#TODO  make sure the PSF input in icore_template matches with the output file name in psfavr8
 			
