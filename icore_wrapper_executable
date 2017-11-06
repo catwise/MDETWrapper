@@ -136,9 +136,9 @@ echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $OutputsD
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
 if($userInput != "Y" && $userInput != "y") then
-	goto fbt3_PSFavr8_Wrapper
-else 
         goto ICORE_Wrapper
+else 
+	goto fbt3_PSFavr8_Wrapper
 endif
 
 
