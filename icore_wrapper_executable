@@ -193,6 +193,7 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 			echo PSFs exist in ${OutputsDir}/${RaRaRa}/${RadecID}/Full/Desc/ 
 			echo Deleting PSF files now...
 			rm -f ${preworkOUTPUTdir}/Desc/*psf*
+		endif
 
 		# fbt3 call
 		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${RadecID}_w1.txt &
