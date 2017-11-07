@@ -176,21 +176,21 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
 		#TODO make dir for Full, asc, dec	
-		mkdir -p ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		mkdir -p ${preworkOUTPUTdir}/Full/
 		mkdir -p ${preworkOUTPUTdir}/Asce
 		mkdir -p ${preworkOUTPUTdir}/Desc 
  
 		#removes any existing psfs
-		if (-f ${OutputsDir}/${RaRaRa}/${RadecID}/Full/*psf*) then
-			echo PSFs exist in ${OutputsDir}/${RaRaRa}/${RadecID}/Full/ 
+		if (`ls ${preworkOUTPUTdir}/Full/*psf* >& /dev/null`)  then
+			echo PSFs exist in ${preworkOUTPUTdir}/Full/ 
 			echo Deleting PSF files now...
-			rm -f ${OutputsDir}/${RaRaRa}/${RadecID}/Full/*psf*               
-		else if (-f ${preworkOUTPUTdir}/Asce/*psf*) then 
-			echo PSFs exist in ${OutputsDir}/${RaRaRa}/${RadecID}/Full/Asce/ 
+			rm -f ${preworkOUTPUTdir}/Full/*psf*               
+		else if (`ls ${preworkOUTPUTdir}/Asce/*psf* >& /dev/null`) then 
+			echo PSFs exist in ${preworkOUTPUTdir}/Full/Asce/ 
 			echo Deleting PSF files now...
 			rm -f ${preworkOUTPUTdir}/Asce/*psf*
-		else if (-f ${preworkOUTPUTdir}/Desc/*psf*) then 
-			echo PSFs exist in ${OutputsDir}/${RaRaRa}/${RadecID}/Full/Desc/ 
+		else if (`ls ${preworkOUTPUTdir}/Desc/*psf* >& /dev/null`) then 
+			echo PSFs exist in ${preworkOUTPUTdir}/Full/Desc/ 
 			echo Deleting PSF files now...
 			rm -f ${preworkOUTPUTdir}/Desc/*psf*
 		endif
