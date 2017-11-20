@@ -69,6 +69,7 @@ else if ($1 == 2) then
         set OutputsDir = $3
         echo Inputs list ==  $InputsList
         echo Outputs directory == $OutputsDir
+	echo
         echo "Is this the correct input list and output directory? (y/n)"
         set userInput = $<
  	
@@ -133,6 +134,7 @@ echo
 echo
 
 echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $OutputsDir"
+echo 
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
 if($userInput != "Y" && $userInput != "y") then
@@ -175,44 +177,58 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
-		#TODO make dir for Full, asc, dec	
-		mkdir -p ${preworkOUTPUTdir}/Full/
-		mkdir -p ${preworkOUTPUTdir}/Asce
-		mkdir -p ${preworkOUTPUTdir}/Desc 
- 
+		if(`mkdir -p ${preworkOUTPUTdir}`) then
+			echo Creating directory ${preworkOUTPUTdir}...
+		endif
+		if(`mkdir -p ${preworkOUTPUTdir}/Asce`) then
+                        echo Creating directory ${preworkOUTPUTdir}/Asce...
+                endif
+		if(`mkdir -p ${preworkOUTPUTdir}/Desc`) then
+                        echo Creating directory ${preworkOUTPUTdir}/Desc...
+                endif
 		#removes any existing psfs
-		if (`ls ${preworkOUTPUTdir}/Full/*psf* >& /dev/null`)  then
-			echo PSFs exist in ${preworkOUTPUTdir}/Full/ 
-			echo Deleting PSF files now...
-			rm -f ${preworkOUTPUTdir}/Full/*psf*               
-		else if (`ls ${preworkOUTPUTdir}/Asce/*psf* >& /dev/null`) then 
-			echo PSFs exist in ${preworkOUTPUTdir}/Full/Asce/ 
-			echo Deleting PSF files now...
+#		if (`ls ${preworkOUTPUTdir}*psf* >& /dev/null`)  then
+#			echo PSFs exist in ${preworkOUTPUTdir} 
+#			echo Deleting PSF files now...
+#			rm -f ${preworkOUTPUTdir}*psf*               
+#		else if (`ls ${preworkOUTPUTdir}/Asce/*psf* >& /dev/null`) then 
+#			echo PSFs exist in ${preworkOUTPUTdir}/Asce/ 
+#			echo Deleting PSF files now...
+#			rm -f ${preworkOUTPUTdir}/Asce/*psf*
+#		else if (`ls ${preworkOUTPUTdir}/Desc/*psf* >& /dev/null`) then 
+#			echo PSFs exist in ${preworkOUTPUTdir}/Desc/ 
+#			echo Deleting PSF files now...
+#			rm -f ${preworkOUTPUTdir}/Desc/*psf*
+#		endif
+		echo
+	        echo Deleting any PSFs if they exist...	
+		if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+     		   	echo PSFs found in ${preworkOUTPUTdir}. Deleting...
+			rm -f ${preworkOUTPUTdir}/*psf*  
+		else if ( `find ${preworkOUTPUTdir}/Asce/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+                        echo ${preworkOUTPUTdir}/Asce/ has psfs. Deleting...
 			rm -f ${preworkOUTPUTdir}/Asce/*psf*
-		else if (`ls ${preworkOUTPUTdir}/Desc/*psf* >& /dev/null`) then 
-			echo PSFs exist in ${preworkOUTPUTdir}/Full/Desc/ 
-			echo Deleting PSF files now...
+		else if ( `find ${preworkOUTPUTdir}/Desc/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+                        echo ${preworkOUTPUTdir}/Desc/ has psfs. Deleting...
 			rm -f ${preworkOUTPUTdir}/Desc/*psf*
 		endif
 
+
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${RadecID}_w1.txt &
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${RadecID}_w2.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt &
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da &
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da &
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		
-		echo Removing w1/w2 txt files created by fbt3
-		rm  ${RadecID}_w1.txt
-		rm  ${RadecID}_w2.txt
 			
 		#TODO  make sure the PSF input in icore_template matches with the output file name in psfavr8
 			
