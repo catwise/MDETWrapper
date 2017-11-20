@@ -138,13 +138,13 @@ echo
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
 if($userInput != "Y" && $userInput != "y") then
-        goto ICORE_Wrapper
+        goto ICORE_Wrapper_Option1
 else 
-	goto fbt3_PSFavr8_Wrapper
+	goto fbt3_PSFavr8_Wrapper_Option1
 endif
 
 
-fbt3_PSFavr8_Wrapper:
+fbt3_PSFavr8_Wrapper_Option1:
 #===============================================================================================================================================================
 #fbt3 and PSFavr8 Wrapper
 
@@ -253,8 +253,7 @@ wait
 echo fbt3 and PSFavr8 wrapper finished!
 echo
 
-
-ICORE_Wrapper:
+ICORE_Wrapper_Option1:
 #===============================================================================================================================================================
 
 echo 2\) ICORE programs now starting...
@@ -465,84 +464,262 @@ echo
 #===============================================================================================================================================================
 goto Done
 
+
+
+
+
 Option2:
-echo HelloWorld
-@ numProgramsRunning = 0
-foreach line (`cat $InputsFile`)
-	set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
-	@ tempIndex = ($tempSize - 8)
-	set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
-	set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
+#===============================================================================================================================================================	
+# links parent and wrapper dir to run "tcsh" and "source SORUCEME" in parent dir
+# this assumes tcsh is installed
+echo Creating temp files...
+cd ..
+tcsh & source SOURCEME && cd $wrapperDir
 
-	echo $RadecIDDir
-	echo "RaRaRa == "$RaRaRa
-	echo "RadecID == "$RadecID
+# loops through all of the tiles and executes icore
 
-	#=========================
-	#fbt3 and PSFavr8 wrapper 
+echo Wrapper now starting...
+
+echo
+echo
+
+echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $OutputsDir"
+echo 
+echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
+set userInput = $<
+if($userInput != "Y" && $userInput != "y") then
+        goto ICORE_Wrapper_Option2
+else 
+	goto fbt3_PSFavr8_Wrapper_Option2
+endif
+
+
+fbt3_PSFavr8_Wrapper_Option2:
+#===============================================================================================================================================================
+#fbt3 and PSFavr8 Wrapper
+
+echo
+echo
+echo 1\) fbt3 and PSFavr8 programs now starting...
+
+#TESTING
+#while
+foreach line (`cat $InputsList`)
 	
-	set INPUTdir = $line
-	echo fbt3 and PSFavr8 Input Dir === $INPUTdir
-	set OUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
-
-	echo calling fbt3 and PSFavr8 on ${RadecID} tile
-		
-	#TODO make dir for Full, asc, dec	
-	mkdir -p ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
-	mkdir -p ${OUTPUTdir}/Asce
-	mkdir -p ${OUTPUTdir}/Desc 
+		echo =============================== start fbt3 and PSFavr8  wrapper loop iteration =================================
  
+		set RaRaRa =  `echo $line | awk -F "/" '{print $(NF-1)}'`
+		set RadecID = `echo $line | awk -F "/" '{print $(NF)}'`
 		
-	# fbt3 call
-	/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${INPUTdir}/unwise-${RadecID}-w1-frames.fits ${RadecID}_w1.txt &
-	/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${INPUTdir}/unwise-${RadecID}-w2-frames.fits ${RadecID}_w2.txt &
-	wait
-		
-	#PSFavr8
-	/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $OUTPUTdir -a1 ${RadecID}_w1.txt -a2 ${RadecID}_w2.txt -t $RadecID -da &
-	
-	echo Removing w1/w2 txt files created by fbt3
-	rm w1.txt
-	rm w2.txt
+		echo "RaRaRa == "$RaRaRa
+		echo "RadecID == "$RadecID
 
-	#=====================
-	#ICORE
+		echo "--------------------------------------- start fbt3 and PSFavr8 wrapper ---------------------------------------"
 		
-	mkdir -p ${OUTPUTdir}/WrapperTerminalOutput/
-	
-	# Copies icore_template to make an icore_coadd script for w1 and w2
-	# NOTE: this assumes "band" variable is in the 4th line of icore_template
-	cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
-	cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
-	sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
-	
-	# Sources/Runs Wrapper executables (one for band 1, other for band 2)
-	# This should run concurrently/in parallel
-	echo Running ICORE for $RadecID
-	
-	wait
-	#TODO: output error message if this doesnt execute!
-	echo Running ICORE for bands 1 and 2 in PARALLEL
-	(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
-	(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 	
-	
-	#=================
-	#MDET
-	
-	echo calling MDET on ${RadecID} tile
-	
-	wait
-	# MDET call
-	(${wrapperDir}/mdet -image1 ${OUTPUTdir}/mosaic-w1-int.fits -image2 ${OUTPUTdir}/mosaic-w2-int.fits -sigimage1 ${OUTPUTdir}/mosaic-w1-unc.fits -sigimage2 ${OUTPUTdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${OUTPUTdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 >& ${OUTPUTdir}/ProgramTerminalOutput/mdet_output.txt) &	
+		set preworkINPUTdir = $line
+		echo fbt3 and PSFavr8 Input Dir === $preworkINPUTdir
+		set preworkOUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
 
-	#FIXME: concurrency not working. need to do individual for loops again.
-	#limits number of concurrent processes
-	#if (numProgramsRunning > 12) then 
-	#	wait
-	#@ numProgramsRunning = 0
-	#endif
-	
+		echo calling fbt3 and PSFavr8 on ${RadecID} tile
+		
+		if(`mkdir -p ${preworkOUTPUTdir}`) then
+			echo Creating directory ${preworkOUTPUTdir}...
+		endif
+		if(`mkdir -p ${preworkOUTPUTdir}/Asce`) then
+                        echo Creating directory ${preworkOUTPUTdir}/Asce...
+                endif
+		if(`mkdir -p ${preworkOUTPUTdir}/Desc`) then
+                        echo Creating directory ${preworkOUTPUTdir}/Desc...
+                endif
+		#removes any existing psfs
+#		if (`ls ${preworkOUTPUTdir}*psf* >& /dev/null`)  then
+#			echo PSFs exist in ${preworkOUTPUTdir} 
+#			echo Deleting PSF files now...
+#			rm -f ${preworkOUTPUTdir}*psf*               
+#		else if (`ls ${preworkOUTPUTdir}/Asce/*psf* >& /dev/null`) then 
+#			echo PSFs exist in ${preworkOUTPUTdir}/Asce/ 
+#			echo Deleting PSF files now...
+#			rm -f ${preworkOUTPUTdir}/Asce/*psf*
+#		else if (`ls ${preworkOUTPUTdir}/Desc/*psf* >& /dev/null`) then 
+#			echo PSFs exist in ${preworkOUTPUTdir}/Desc/ 
+#			echo Deleting PSF files now...
+#			rm -f ${preworkOUTPUTdir}/Desc/*psf*
+#		endif
+		echo
+	        echo Deleting any PSFs if they exist...	
+		if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+     		   	echo PSFs found in ${preworkOUTPUTdir}. Deleting...
+			rm -f ${preworkOUTPUTdir}/*psf*  
+		else if ( `find ${preworkOUTPUTdir}/Asce/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+                        echo ${preworkOUTPUTdir}/Asce/ has psfs. Deleting...
+			rm -f ${preworkOUTPUTdir}/Asce/*psf*
+		else if ( `find ${preworkOUTPUTdir}/Desc/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+                        echo ${preworkOUTPUTdir}/Desc/ has psfs. Deleting...
+			rm -f ${preworkOUTPUTdir}/Desc/*psf*
+		endif
+
+
+		# fbt3 call
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt &
+	        if ($status != 0) then
+		    echo fbt3 failed with an exit status of $status. Exiting...
+		    exit
+                endif	    
+		wait
+		#PSFavr8
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da &
+	        if ($status != 0) then
+		    echo PSFavr8 failed with an exit status of $status. Exiting...
+		    exit
+                endif	    
+		
+			
+		#TODO  make sure the PSF input in icore_template matches with the output file name in psfavr8
+			
+
+		#Stops calling programs if number of scripts running is greater than number of threads on CPU
+                while(`ps -ef | grep PSFavr8 | wc -l` > 12)
+                        #echo IM WATING
+			#do nothing
+                end
+		
+		echo fbt3 and PSFavr8 for ${RadecID} done!
+		
+		echo "---------------------------------------- end fbt3 and PSFavr8 wrapper ----------------------------------------"
+		echo ================================ end fbt3 and PSFavr8 wrapper loop iteration =================================
 end
+
+#===============================================================================================================================================================
+
+#wait for background processes to finish
+wait
+echo fbt3 and PSFavr8 wrapper finished!
+echo
+
+ICORE_Wrapper_Option2:
+#===============================================================================================================================================================
+
+echo 2\) ICORE programs now starting...
+
+foreach line (`cat $InputsList`)
+		echo ===================================== start ICORE wrapper loop iteration =====================================
+
+		set RaRaRa =  `echo $line | awk -F "/" '{print $(NF-1)}'`
+		set RadecID = `echo $line | awk -F "/" '{print $(NF)}'`
+		
+		echo "RaRaRa == "$RaRaRa
+		echo "RadecID == "$RadecID
+		
+		echo "-------------------------------------------- start ICORE wrapper ---------------------------------------------"
+		
+		set inputdir = $line
+		set OUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		
+		echo Current Input Directory === $line
+		echo Current Output Directory === $OUTPUTdir
+		mkdir -p $OUTPUTdir
+		mkdir -p ${OUTPUTdir}/ProgramTerminalOutput/
+		#===============================================================================================================================================
+	
+		# Copies icore_template to make an icore_coadd script for w1 and w2
+		# NOTE: this assumes "band" variable is in the 4th line of icore_template
+		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
+		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
+	
+		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
+		# This should run concurrently/in parallel
+		echo Running ICORE for $RadecID
+	
+	        #TODO: output error message if this doesnt execute!
+		echo Running ICORE for bands 1 and 2 in PARALLEL
+		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
+		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
+#		wait
+
+	        if ($status != 0) then
+		    echo ERROR: ICORE failed with an exit status of $status. Exitiing...
+		    exit
+                endif	    
+		#echo running ICORE for bands 1 and 2 in GNU PARALLEL
+		#parallel ::: 'source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt' 'source ${wrapperDir}/icore_coadd_w2 |& tee ${OUTPUTdir}/wrapper_w2_output.txt' 
+		#(echo '"source '$wrapperDir'/icore_coadd_w1 |& tee '$OUTPUTdir'/wrapper_w1_output.txt"' ; echo '"source '$wrapperDir'/icore_coadd_w2 |& tee '$OUTPUTdir'/wrapper_w2_output.txt\"') | parallel
+		#echo done with GNU parallel		
+	
+		#TODO run in parallel! Fix the background not closing problem
+		#echo running ICORE for bands 1 and 2 in SERIES
+		#(source ${wrapperDir}/icore_coadd_w1 |& tee "$OUTPUTdir"/wrapper_w1_output.txt)   
+		#(source ${wrapperDir}/icore_coadd_w2 |& tee "$OUTPUTdir"/wrapper_w2_output.txt) 
+	
+		#Stops calling programs if number of scripts running is greater than number of threads on CPU
+		while(`ps -ef | grep icore_coadd_w | wc -l` > 12)
+                	#do nothing
+        	end
+			
+		echo ICORE for $RadecID done!	
+		echo "--------------------------------------------- end ICORE wrapper ----------------------------------------------"
+		
+		echo ====================================== end ICORE wrapper loop iteration ======================================
+end
+#===============================================================================================================================================================
+
+#wait for background processes to finish
+wait
+echo ICORE wrapper finished!
+echo
+
+#===============================================================================================================================================================
+#MDET Wrapper
+
+echo
+echo
+echo 3\) MDET programs now starting...
+
+	
+foreach line (`cat $InputsList`)	
+		echo ===================================== start MDET wrapper loop iteration ======================================
+ 
+		set RaRaRa =  `echo $line | awk -F "/" '{print $(NF-1)}'`
+		set RadecID = `echo $line | awk -F "/" '{print $(NF)}'`
+		
+		echo "RaRaRa == "$RaRaRa
+		echo "RadecID == "$RadecID
+	
+		echo "--------------------------------------------- start MDET wrapper ---------------------------------------------"
+		
+		set MDETInputdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		echo MDET Input Dir === $MDETInputdir
+		
+		echo calling MDET on ${RadecID} tile
+			
+		# MDET call
+		(${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 >& ${MDETInputdir}/ProgramTerminalOutput/mdet_output.txt) &	
+	        if ($status != 0) then
+		    echo ERROR: mdet failed with an exit status of $status. Exiting...
+		    exit 
+                endif	    
+		# MDET with Masks	
+		#${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -cmask1 ${MDETInputdir}/1124p045_ac51-w1-cmsk-3.fits -cmask2 ${MDETInputdir}1124p045_ac51-w2-cmsk-3.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 	
+		
+		#Stops calling programs if number of scripts running is greater than number of threads on CPU
+                while(`ps -ef | grep mdet | wc -l` > 12)
+                        #echo IM WATING
+			#do nothing
+                end
+		
+		echo MDET for ${RadecID} done!
+		
+		echo "---------------------------------------------- end MDET wrapper ----------------------------------------------"
+		echo ====================================== end MDET wrapper loop iteration =======================================
+end
+
+#===============================================================================================================================================================
+
+#wait for background processes to finish
+wait
+echo MDET wrapper finished!
+echo
 goto Done
 
 
