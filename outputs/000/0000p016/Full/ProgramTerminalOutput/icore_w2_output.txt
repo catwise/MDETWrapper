@@ -1,3 +1,0 @@
-Running ICORE for band 2...
-icore: Command not found.
-Successfully ran ICORE for band 2!
