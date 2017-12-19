@@ -413,84 +413,7 @@ end
 wait
 echo MDET wrapper finished!
 echo
- 
-#===============================================================================================================================================================
-#WPHOTPMC Wrapper
-
-#echo
-#echo
-#echo 4\) WPHOTPMC programs now starting...
-
-#foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
-	
-#	foreach RadecIDDir ($RaRaRaDir*/)
-	
-#		echo ===================================== start WPHOTPMC wrapper loop iteration ======================================
- 
-#		set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
-#		@ tempIndex = ($tempSize - 8)
-#		set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
-#		set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
-	
-#		echo $RadecIDDir
-#		echo "RaRaRa == "$RaRaRa
-#		echo "RadecID == "$RadecID
-	
-#		echo "--------------------------------------------- start WPHOTPMC wrapper ---------------------------------------------"
-		
-#		set MDETInputdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
-		#set EpochsFramesList = ${OutputsDir}/${RaRaRa}/${RadecID}/frames.list.tbl
-		#set PSFdir = ${OutputsDir}/${RaRaRa}/${RadecID}/PSFs/
-		#set Coadddir = ${OutputsDir}/${RaRaRa}/${RadecID}/Coadds/
-#		echo MDET Input Dir === $MDETInputdir
-		
-#		echo calling WPHOTPMC on ${RadecID} tile
-	
-		#WPHOTPMC call
-#		set editedMDETInputdir = `echo $MDETInputdir | sed 's/\//\\\//g'`
-		#changes MDET output location
-#		sed -i --follow-symlinks "16s/.*.*/set mdetfile = ${editedMDETInputdir}detlist.tbl/g" ${wrapperDir}/run_wphotpmc.csh
-		#changes frames list	
-#		sed -i --follow-symlinks "20s/.*.*/set flist = ${editedMDETInputdir}frames\/frames.list_unwise.tbl/g" ${wrapperDir}/run_wphotpmc.csh	
-		#changes PSFs dir
-#		sed -i --follow-symlinks "34s/.*.*/set psfdir = ${editedMDETInputdir}/g" ${wrapperDir}/run_wphotpmc.csh	
-		#changes coadds list
-#		sed -i --follow-symlinks "41s/.*.*/set cname = ${editedMDETInputdir}mosiac/g" ${wrapperDir}/run_wphotpmc.csh
-		#changes QA output dir
-#                sed -i --follow-symlinks "48s/.*.*/set outQAdir = ${editedMDETInputdir}QAOutputWPHOTPMC/g" ${wrapperDir}/run_wphotpmc.csh
-	        #changes WPHOTPMC output dir
-#                sed -i --follow-symlinks "53s/.*.*/set outdir = ${editedMDETInputdir}OutputWPHOTPMC/g" ${wrapperDir}/run_wphotpmc.csh
-	        #changes WPHOTPMC terminal output file name
-#                sed -i --follow-symlinks "58s/.*.*/set terminaloutname = ${editedMDETInputdir}ProgramTerminalOutput\/wphotpmc_output.txt/g" ${wrapperDir}/run_wphotpmc.csh
-			
-		# run WPHOTPMC
-		#${wrapperDir}/run_wphotpmc.csh
-	        # if ($status != 0) then
-		# echo ERROR: WPHOT failed with an exit status of $status. Exiting...
-		# exit
-		#endif  		
-		#Stops calling programs if number of scripts running is greater than number of threads on CPU
- #               while(`ps -ef | grep wphot | wc -l` > 12)
-                        #do nothing
- #               end
-		
-#		echo WPHOTPMC for ${RadecID} done!
-		
-#		echo "---------------------------------------------- end WPHOTPMC wrapper ----------------------------------------------"
-#		echo ====================================== end WPHOTPMC wrapper loop iteration =======================================
-#	end
-#end
-#===============================================================================================================================================================
-
-#wait for background processes to finish
-#wait
-#echo WPHOT wrapper finished!
-#echo
-#===============================================================================================================================================================
 goto Done
-
-
-
 
 
 Mode2:
@@ -748,8 +671,194 @@ echo
 goto Done
 
 Mode3:
-goto Done
+        set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
+        set UnWISEDir = $ParentDir/UnWISE/Fulldepth/$RaRaRa/$RadecID/
+        set CatWISEDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/Full/
+        set TileDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/
 
+        #Error Checking
+        if(! -d $UnWISEDir) then
+                echo ERROR: $UnWISEDir does not exist.
+                echo
+                echo Exiting...
+                exit
+        endif
+        if(! -d $CatWISEDir) then
+                echo $CatWISEDir does not exist. Creating $CatWISEDir
+		mkdir -p $CatWISEDir
+        endif
+
+#===============================================================================================================================================================	
+# links parent and wrapper dir to run "tcsh" and "source SORUCEME" in parent dir
+# this assumes tcsh is installed
+echo Creating temp files...
+cd ..
+tcsh & source SOURCEME && cd $wrapperDir
+
+# loops through all of the tiles and executes icore
+
+
+echo Wrapper now starting...
+
+echo
+echo
+
+echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $OutputsDir"
+echo 
+echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
+set userInput = $<
+if($userInput != "Y" && $userInput != "y") then
+        goto ICORE_Wrapper_Mode3
+else 
+	goto fbt3_PSFavr8_Wrapper_Mode3
+endif
+
+
+fbt3_PSFavr8_Wrapper_Mode3:
+#===============================================================================================================================================================
+#fbt3 and PSFavr8 Wrapper
+
+echo
+echo
+echo 1\) fbt3 and PSFavr8 programs now starting...
+
+ 
+		echo "--------------------------------------- start fbt3 and PSFavr8 wrapper ---------------------------------------"
+		
+		set preworkINPUTdir = ${UnWISEDir}
+		echo fbt3 and PSFavr8 Input Dir === $preworkINPUTdir
+		set preworkOUTPUTdir = ${CatWISEDir}
+
+		echo calling fbt3 and PSFavr8 on ${RadecID} tile
+		
+		if(`mkdir -p ${preworkOUTPUTdir}`) then
+			echo Creating directory ${preworkOUTPUTdir}...
+		endif
+		if(`mkdir -p ${preworkOUTPUTdir}/Asce`) then
+                        echo Creating directory ${preworkOUTPUTdir}/Asce...
+                endif
+		if(`mkdir -p ${preworkOUTPUTdir}/Desc`) then
+                        echo Creating directory ${preworkOUTPUTdir}/Desc...
+                endif
+		#removes any existing psfs
+		echo
+	        echo Deleting any PSFs if they exist...	
+		if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+     		   	echo PSFs found in ${preworkOUTPUTdir}. Deleting...
+			rm -f ${preworkOUTPUTdir}/*psf*  
+		else if ( `find ${preworkOUTPUTdir}/Asce/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+                        echo ${preworkOUTPUTdir}/Asce/ has psfs. Deleting...
+			rm -f ${preworkOUTPUTdir}/Asce/*psf*
+		else if ( `find ${preworkOUTPUTdir}/Desc/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+                        echo ${preworkOUTPUTdir}/Desc/ has psfs. Deleting...
+			rm -f ${preworkOUTPUTdir}/Desc/*psf*
+		endif
+
+
+		# fbt3 call
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt &
+	        if ($status != 0) then
+		    echo fbt3 failed with an exit status of $status. Exiting...
+		    exit
+                endif	    
+		wait
+		#PSFavr8
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da &
+	        if ($status != 0) then
+		    echo PSFavr8 failed with an exit status of $status. Exiting...
+		    exit
+                endif	    
+		
+			
+		#TODO  make sure the PSF input in icore_template matches with the output file name in psfavr8
+
+		echo fbt3 and PSFavr8 for ${RadecID} done!
+		
+		echo "---------------------------------------- end fbt3 and PSFavr8 wrapper ----------------------------------------"
+
+#===============================================================================================================================================================
+
+echo fbt3 and PSFavr8 wrapper finished!
+echo
+
+ICORE_Wrapper_Mode3:
+#===============================================================================================================================================================
+
+echo 2\) ICORE program now starting...
+
+
+	
+		echo "-------------------------------------------- start ICORE wrapper ---------------------------------------------"
+		
+		set INPUTdir = ${UnWISEDir}
+		set OUTPUTdir = ${CatWISEDir}
+		
+		echo Current Input Directory === $INPUTdir
+		echo Current Output Directory === $OUTPUTdir
+		mkdir -p $OUTPUTdir
+		mkdir -p ${OUTPUTdir}/ProgramTerminalOutput/
+		#===============================================================================================================================================
+	
+		# Copies icore_template to make an icore_coadd script for w1 and w2
+		# NOTE: this assumes "band" variable is in the 4th line of icore_template
+		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
+		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
+	
+		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
+		# This should run concurrently/in parallel
+		echo Running ICORE for $RadecID
+	
+	        #TODO: output error message if this doesnt execute!
+		echo Running ICORE for bands 1 and 2 in PARALLEL
+		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
+		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
+#		wait
+
+	        if ($status != 0) then
+		    echo ERROR: ICORE failed with an exit status of $status. Exitiing...
+		    exit
+                endif	    
+	
+		echo ICORE for $RadecID done!	
+		echo "--------------------------------------------- end ICORE wrapper ----------------------------------------------"
+		
+#===============================================================================================================================================================
+
+echo ICORE wrapper finished!
+echo
+
+#===============================================================================================================================================================
+#MDET Wrapper
+
+echo
+echo
+echo 3\) MDET program now starting...
+
+		echo "--------------------------------------------- start MDET wrapper ---------------------------------------------"
+		
+		set MDETInputdir = ${CatWISEDir}
+		echo MDET Input Dir === $MDETInputdir
+		
+		echo calling MDET on ${RadecID} tile
+			
+		# MDET call
+		(${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 >& ${MDETInputdir}/ProgramTerminalOutput/mdet_output.txt) &	
+	        if ($status != 0) then
+		    echo ERROR: mdet failed with an exit status of $status. Exiting...
+		    exit 
+                endif	    
+		
+		echo MDET for ${RadecID} done!
+		
+		echo "---------------------------------------------- end MDET wrapper ----------------------------------------------"
+
+#===============================================================================================================================================================
+
+echo MDET wrapper finished!
+echo
+goto Done
 
 Done:		
 # Deletes and cleans up files
