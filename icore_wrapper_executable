@@ -23,14 +23,14 @@ if ($# != 3) then
 	#Too many or too little arguments	
 	echo "ERROR: not enough arguments:"
 	echo "Parameters for wrapper must be in the order:"
-	echo 1\) Option 1 or 2 \(1 == Input directory, 2 == Input list\)
-	echo 2\) Input directory or list
-	echo 3\) Output directory 
+	echo 1\) Mode 1 2 or 3 \(1 == Input directory, 2 == Input listof Tiles, 2 == Single Tile\)
+	echo 2\) Input directory or list or Parent Directory
+	echo 3\) Output directory or Tile Name
 	echo "i.e. 'icore_wrapper_executable option InputDir/List OutputDir'" 
 	echo 
 	echo Exiting...
 	exit 
-#Option1
+#Mode1 Everything Mode
 else if ($1 == 1) then
 	set InputsDir = $2
 	set OutputsDir = $3
@@ -62,8 +62,8 @@ else if ($1 == 1) then
 		exit
 	endif
 	
-	goto Option1
-#Option2
+	goto Mode1
+#Mode2 List of Tiles Mode
 else if ($1 == 2) then
 	set InputsList = $2
         set OutputsDir = $3
@@ -95,12 +95,37 @@ else if ($1 == 2) then
                 echo Exiting...
                 exit
         endif
-
-	goto Option2
+	goto Mode2
+#Mode3 Single Tile Mode
+else if ($1 == 3) then
+        set ParentDir = $2
+        set RadecID = $3
+        echo Parent Dir ==  $ParentDir
+        echo Tile Name == $RadecID
+        echo
+        echo "Is this the correct Parent Directory  and Tile Name? (y/n)"
+        set userInput = $<
+        #Error handling
+        #if user input dir wrong
+        if($userInput != "Y" && $userInput != "y") then
+                echo Please execute program again with Parent Directory as the 2nd parameter and the Tile Name as your 3rd parameter
+                #TODO actually throw an error instead of just outputing to stdout... output to stderr
+                echo
+                echo Exiting...
+                exit
+        endif
+        #if directories dont exist, throw error
+        if(! -d $ParentDir) then
+                echo ERROR: $ParentDir doest not exist.
+                echo
+                echo Exiting...
+                exit
+        endif
+        goto Mode3
 else
 	#Error handling
-	#option 1/2 not second parameter. program exits.
-	echo ERROR option 1 or 2 not selected
+	#mode 1/2 not second parameter. program exits.
+	echo ERROR mode 1, 2, or 3 not selected
 	echo
 	echo Exiting...
 	exit
@@ -109,7 +134,7 @@ endif
 
 
 
-Option1:
+Mode1:
 #===============================================================================================================================================================	
 # links parent and wrapper dir to run "tcsh" and "source SORUCEME" in parent dir
 # this assumes tcsh is installed
@@ -138,13 +163,13 @@ echo
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
 if($userInput != "Y" && $userInput != "y") then
-        goto ICORE_Wrapper_Option1
+        goto ICORE_Wrapper_Mode1
 else 
-	goto fbt3_PSFavr8_Wrapper_Option1
+	goto fbt3_PSFavr8_Wrapper_Mode1
 endif
 
 
-fbt3_PSFavr8_Wrapper_Option1:
+fbt3_PSFavr8_Wrapper_Mode1:
 #===============================================================================================================================================================
 #fbt3 and PSFavr8 Wrapper
 
@@ -253,7 +278,7 @@ wait
 echo fbt3 and PSFavr8 wrapper finished!
 echo
 
-ICORE_Wrapper_Option1:
+ICORE_Wrapper_Mode1:
 #===============================================================================================================================================================
 
 echo 2\) ICORE programs now starting...
@@ -468,7 +493,7 @@ goto Done
 
 
 
-Option2:
+Mode2:
 #===============================================================================================================================================================	
 # links parent and wrapper dir to run "tcsh" and "source SORUCEME" in parent dir
 # this assumes tcsh is installed
@@ -488,13 +513,13 @@ echo
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
 if($userInput != "Y" && $userInput != "y") then
-        goto ICORE_Wrapper_Option2
+        goto ICORE_Wrapper_Mode2
 else 
-	goto fbt3_PSFavr8_Wrapper_Option2
+	goto fbt3_PSFavr8_Wrapper_Mode2
 endif
 
 
-fbt3_PSFavr8_Wrapper_Option2:
+fbt3_PSFavr8_Wrapper_Mode2:
 #===============================================================================================================================================================
 #fbt3 and PSFavr8 Wrapper
 
@@ -597,7 +622,7 @@ wait
 echo fbt3 and PSFavr8 wrapper finished!
 echo
 
-ICORE_Wrapper_Option2:
+ICORE_Wrapper_Mode2:
 #===============================================================================================================================================================
 
 echo 2\) ICORE programs now starting...
@@ -720,6 +745,9 @@ end
 wait
 echo MDET wrapper finished!
 echo
+goto Done
+
+Mode3:
 goto Done
 
 
