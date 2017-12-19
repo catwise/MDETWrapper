@@ -8,10 +8,10 @@ echo Running ICORE for band ${band}...
 #===========================================================================
 
 # Creating input file lists using input folders, extracting the file names to a txt file: 
-mkdir -p ${InputsDir}/Lists
-set psf_list_file = ${InputsDir}/Lists/PSFs_list_w${band}.txt
-set int_list_file = ${InputsDir}/Lists/img_list_w${band}.txt
-set unc_list_file = ${InputsDir}/Lists/unc_list_w${band}.txt
+mkdir -p ${OUTPUTdir}/ProgramTerminalOutput/Lists
+set psf_list_file = ${OUTPUTdir}/ProgramTerminalOutput/Lists/PSFs_list_w${band}.txt
+set int_list_file = ${OUTPUTdir}/ProgramTerminalOutput/Lists/img_list_w${band}.txt
+set unc_list_file = ${OUTPUTdir}/ProgramTerminalOutput/Lists/unc_list_w${band}.txt
 
 # NOTE: this extraction assumes that ALL files follow the same format. Please name files accordingly.
 # This will delete the previous list files. They will be deleted b/c they take up unnecessary space.
