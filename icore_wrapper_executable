@@ -121,6 +121,7 @@ else if ($1 == 3) then
                 echo Exiting...
                 exit
         endif
+echo "going to Mode3"
         goto Mode3
 else
 	#Error handling
@@ -158,7 +159,7 @@ echo Wrapper now starting...
 echo
 echo
 
-echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $OutputsDir"
+echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $CatWISEDir"
 echo 
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
@@ -687,6 +688,8 @@ Mode3:
                 echo $CatWISEDir does not exist. Creating $CatWISEDir
 		mkdir -p $CatWISEDir
         endif
+	echo UnWISEDir == $UnWISEDir
+	echo CatWISEDir == $CatWISEDir
 
 #===============================================================================================================================================================	
 # links parent and wrapper dir to run "tcsh" and "source SORUCEME" in parent dir
@@ -703,7 +706,7 @@ echo Wrapper now starting...
 echo
 echo
 
-echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $OutputsDir"
+echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $TileDir"
 echo 
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
@@ -756,15 +759,15 @@ echo 1\) fbt3 and PSFavr8 programs now starting...
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt &
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da &
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da 
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
@@ -793,6 +796,8 @@ echo 2\) ICORE program now starting...
 		
 		set INPUTdir = ${UnWISEDir}
 		set OUTPUTdir = ${CatWISEDir}
+		#InputsDir used for icore_template... TODO make sure template depents on INPUTdir instead...
+		set InputsDir = $INPUTdir
 		
 		echo Current Input Directory === $INPUTdir
 		echo Current Output Directory === $OUTPUTdir
@@ -812,9 +817,8 @@ echo 2\) ICORE program now starting...
 	
 	        #TODO: output error message if this doesnt execute!
 		echo Running ICORE for bands 1 and 2 in PARALLEL
-		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
-		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
-#		wait
+		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt)
+		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt)
 
 	        if ($status != 0) then
 		    echo ERROR: ICORE failed with an exit status of $status. Exitiing...
@@ -842,9 +846,12 @@ echo 3\) MDET program now starting...
 		echo MDET Input Dir === $MDETInputdir
 		
 		echo calling MDET on ${RadecID} tile
-			
+		
+		echo MDET image1 location ${MDETInputdir}/mosaic-w1-int.fits	
+		echo MDET image2 location ${MDETInputdir}/mosaic-w2-int.fits	
+
 		# MDET call
-		(${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 >& ${MDETInputdir}/ProgramTerminalOutput/mdet_output.txt) &	
+		(${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold 2.40 -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 >& ${MDETInputdir}/ProgramTerminalOutput/mdet_output.txt)
 	        if ($status != 0) then
 		    echo ERROR: mdet failed with an exit status of $status. Exiting...
 		    exit 
