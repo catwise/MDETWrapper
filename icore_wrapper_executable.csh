@@ -145,14 +145,7 @@ tcsh & source SOURCEME && cd $wrapperDir
 
 # loops through all of the tiles and executes icore
 
-if (! -d ${InputsDir}/Fulldepth/ ) then
-	    echo ERROR: ${InputsDir}/Fulldepth/ does not exist. Please put all RaRaRa folders in this. 
-	    echo ex) ${InputsDir}/Fulldepth/000/, ${InputsDir}/Fulldepth/055/, etc
-	    echo exiting...
-	    exit
-endif 
-
-set FulldepthDir = ${InputsDir}/Fulldepth/
+set FulldepthDir = ${InputsDir}/
 
 echo Wrapper now starting...
 
@@ -213,19 +206,6 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
                         echo Creating directory ${preworkOUTPUTdir}/Desc...
                 endif
 		#removes any existing psfs
-#		if (`ls ${preworkOUTPUTdir}*psf* >& /dev/null`)  then
-#			echo PSFs exist in ${preworkOUTPUTdir} 
-#			echo Deleting PSF files now...
-#			rm -f ${preworkOUTPUTdir}*psf*               
-#		else if (`ls ${preworkOUTPUTdir}/Asce/*psf* >& /dev/null`) then 
-#			echo PSFs exist in ${preworkOUTPUTdir}/Asce/ 
-#			echo Deleting PSF files now...
-#			rm -f ${preworkOUTPUTdir}/Asce/*psf*
-#		else if (`ls ${preworkOUTPUTdir}/Desc/*psf* >& /dev/null`) then 
-#			echo PSFs exist in ${preworkOUTPUTdir}/Desc/ 
-#			echo Deleting PSF files now...
-#			rm -f ${preworkOUTPUTdir}/Desc/*psf*
-#		endif
 		echo
 	        echo Deleting any PSFs if they exist...	
 		if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
@@ -673,7 +653,7 @@ goto Done
 
 Mode3:
         set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
-        set UnWISEDir = $ParentDir/UnWISE/Fulldepth/$RaRaRa/$RadecID/
+        set UnWISEDir = $ParentDir/UnWISE/$RaRaRa/$RadecID/
         set CatWISEDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/Full/
         set TileDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/
 
