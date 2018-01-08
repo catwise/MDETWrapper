@@ -22,10 +22,10 @@ find ${OUTPUTdir} -type f | grep unwise-w${band}-psf-awaic-01x01-01x01.fits  > $
 #find ${OUTPUTdir} -type f | grep w${band}-psf-  > ${psf_list_file}
 #find ${INPUTdir} -type f | grep w${band}-psf-  > ${psf_list_file}
 
-#find ${INPUTdir} -type f | grep w${band}-img-u > ${int_list_file}
-#find ${INPUTdir} -type f | grep w${band}-std-u > ${unc_list_file}
-find ${INPUTdir} -type f | grep w${band}-img-m > ${int_list_file}
-find ${INPUTdir} -type f | grep w${band}-std-m > ${unc_list_file}
+find ${INPUTdir} -type f | grep w${band}-img-u > ${int_list_file}
+find ${INPUTdir} -type f | grep w${band}-std-u > ${unc_list_file}
+#find ${INPUTdir} -type f | grep w${band}-img-m > ${int_list_file}
+#find ${INPUTdir} -type f | grep w${band}-std-m > ${unc_list_file}
 #===========================================================================
 #modhead fix
 set intImageFileName = `head -n1 ${int_list_file}`
