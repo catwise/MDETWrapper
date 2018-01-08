@@ -26,7 +26,7 @@ if ($# != 3) then
 	echo 1\) Mode 1 2 or 3 \(1 == Input directory, 2 == Input listof Tiles, 2 == Single Tile\)
 	echo 2\) Input directory or list or Parent Directory
 	echo 3\) Output directory or Tile Name
-	echo "i.e. 'icore_wrapper_executable option InputDir/List OutputDir'" 
+	echo "i.e. './icore_wrapper_executable.csh option InputDir/List OutputDir'" 
 	echo 
 	echo Exiting...
 	exit 
@@ -291,8 +291,8 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
-		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
+		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w2
 		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
 	
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
@@ -553,8 +553,8 @@ foreach line (`cat $InputsList`)
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
-		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
+		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w2
 		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
 	
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
@@ -787,8 +787,8 @@ echo 2\) ICORE program now starting...
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w1
-		cp  ${wrapperDir}/icore_template ${wrapperDir}/icore_coadd_w2
+		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w2
 		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
 	
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
@@ -851,7 +851,7 @@ Done:
 # Deletes and cleans up files
 cd $wrapperDir
 echo Deleting Wrapper temp files...
-source icore_cleanup_wrapper
+source icore_cleanup_wrapper.csh
 echo Done deleting!
 
 
