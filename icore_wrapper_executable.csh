@@ -8,6 +8,8 @@ echo
 echo Wrapper Started at:
 echo $startTime
 echo
+echo Version 2.01 
+echo
 echo This Wrapper will wrap around and run these 3 programs:
 #echo This Wrapper will wrap around and run these 4 programs:
 echo 1\) fbt3 and PSFavr8
@@ -65,11 +67,11 @@ else if ($1 == 1) then
 	goto Mode1
 #Mode2 List of Tiles Mode
 else if ($1 == 2) then
-	set InputsList = $2
+		set InputsList = $2
         set OutputsDir = $3
         echo Inputs list ==  $InputsList
         echo Outputs directory == $OutputsDir
-	echo
+		echo
         echo "Is this the correct input list and output directory? (y/n)"
         set userInput = $<
  	
