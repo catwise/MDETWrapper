@@ -154,7 +154,7 @@ echo Wrapper now starting...
 echo
 echo
 
-echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $CatWISEDir"
+echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $InputsDir"
 echo 
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
