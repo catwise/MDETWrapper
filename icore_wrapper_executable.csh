@@ -8,17 +8,12 @@ echo
 echo Wrapper Started at:
 echo $startTime
 echo
-echo Version 2.01 
+echo Version 2.02 
 echo
 echo This Wrapper will wrap around and run these 3 programs:
-#echo This Wrapper will wrap around and run these 4 programs:
 echo 1\) fbt3 and PSFavr8
 echo 2\) ICORE
 echo 3\) MDET
-#echo 4\) WPHOTPMC
-#echo ================================================================================================================
-#echo WARNING\: Elijah is doing testing\/editing to this program \(Oct10 2017\). This script will not work propperly.
-#echo ================================================================================================================
 
 if ($# != 3) then
 	#Error handling
@@ -210,28 +205,25 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		#removes any existing psfs
 		echo
 	        echo Deleting any PSFs if they exist...	
-		if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
-     		   	echo PSFs found in ${preworkOUTPUTdir}. Deleting...
-			rm -f ${preworkOUTPUTdir}/*psf*  
-		else if ( `find ${preworkOUTPUTdir}/Asce/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
-                        echo ${preworkOUTPUTdir}/Asce/ has psfs. Deleting...
-			rm -f ${preworkOUTPUTdir}/Asce/*psf*
-		else if ( `find ${preworkOUTPUTdir}/Desc/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
-                        echo ${preworkOUTPUTdir}/Desc/ has psfs. Deleting...
-			rm -f ${preworkOUTPUTdir}/Desc/*psf*
-		endif
+		#if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+			rm -f ${preworkOUTPUTdir}/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}. Deleting...
+		#else if ( `find ${preworkOUTPUTdir}/Asce/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+			rm -f ${preworkOUTPUTdir}/Asce/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}/Asce/. Deleting...
+		#else if ( `find ${preworkOUTPUTdir}/Desc/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
+			rm -f ${preworkOUTPUTdir}/Desc/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}/Desc/. Deleting...
+		#endif
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt &
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt &
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da &
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
@@ -293,9 +285,9 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w1
-		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w2
-		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
+		cp  ${wrapperDir}/icore_template.csh ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template.csh ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2
+		sed -i --follow-symlinks '4s/1/2/' ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2
 	
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
 		# This should run concurrently/in parallel
@@ -303,8 +295,8 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 	
 	        #TODO: output error message if this doesnt execute!
 		echo Running ICORE for bands 1 and 2 in PARALLEL
-		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
-		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
+		(source ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
+		(source ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
 #		wait
 
 	        if ($status != 0) then
@@ -491,15 +483,15 @@ foreach line (`cat $InputsList`)
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt &
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt &
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da &
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
@@ -555,9 +547,9 @@ foreach line (`cat $InputsList`)
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w1
-		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w2
-		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
+		cp  ${wrapperDir}/icore_template.csh ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template.csh ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2
+		sed -i --follow-symlinks '4s/1/2/' ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2
 	
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
 		# This should run concurrently/in parallel
@@ -565,8 +557,8 @@ foreach line (`cat $InputsList`)
 	
 	        #TODO: output error message if this doesnt execute!
 		echo Running ICORE for bands 1 and 2 in PARALLEL
-		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
-		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
+		(source ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt) & 
+		(source ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt) & 
 #		wait
 
 	        if ($status != 0) then
@@ -741,15 +733,15 @@ echo 1\) fbt3 and PSFavr8 programs now starting...
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits fbt3_w1.txt
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits fbt3_w2.txt
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt
+		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 fbt3_w1.txt -a2 fbt3_w2.txt -t $RadecID -da 
+		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da 
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
@@ -789,9 +781,9 @@ echo 2\) ICORE program now starting...
 	
 		# Copies icore_template to make an icore_coadd script for w1 and w2
 		# NOTE: this assumes "band" variable is in the 4th line of icore_template
-		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w1
-		cp  ${wrapperDir}/icore_template.csh ${wrapperDir}/icore_coadd_w2
-		sed -i --follow-symlinks '4s/1/2/' ${wrapperDir}/icore_coadd_w2
+		cp  ${wrapperDir}/icore_template.csh ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w1
+		cp  ${wrapperDir}/icore_template.csh ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2
+		sed -i --follow-symlinks '4s/1/2/' ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2
 	
 		# Sources/Runs Wrapper executables (one for band 1, other for band 2)
 		# This should run concurrently/in parallel
@@ -799,8 +791,8 @@ echo 2\) ICORE program now starting...
 	
 	        #TODO: output error message if this doesnt execute!
 		echo Running ICORE for bands 1 and 2 in PARALLEL
-		(source ${wrapperDir}/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt)
-		(source ${wrapperDir}/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt)
+		(source ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w1 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w1_output.txt)
+		(source ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2 >& ${OUTPUTdir}/ProgramTerminalOutput/icore_w2_output.txt)
 
 	        if ($status != 0) then
 		    echo ERROR: ICORE failed with an exit status of $status. Exitiing...
