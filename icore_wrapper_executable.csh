@@ -520,15 +520,15 @@ echo 2\) ICORE programs now starting...
 foreach line (`cat $InputsList`)
 		echo ===================================== start ICORE wrapper loop iteration =====================================
 
-		set RaRaRa =  `echo $line | awk -F "/" '{print $(NF-1)}'`
-		set RadecID = `echo $line | awk -F "/" '{print $(NF)}'`
+		set RadecID = `echo $line`
+                set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
 		
 		echo "RaRaRa == "$RaRaRa
 		echo "RadecID == "$RadecID
 		
 		echo "-------------------------------------------- start ICORE wrapper ---------------------------------------------"
 		
-		set inputdir = ${ParentDir}/UnWISE/${RaRaRa}/${RadecID}/
+		set INPUTdir = ${ParentDir}/UnWISE/${RaRaRa}/${RadecID}/
 		set OUTPUTdir = ${ParentDir}/CatWISE/${RaRaRa}/${RadecID}/Full/
 		
 		echo Current Input Directory === $line
@@ -595,9 +595,9 @@ echo 3\) MDET programs now starting...
 foreach line (`cat $InputsList`)	
 		echo ===================================== start MDET wrapper loop iteration ======================================
  
-		set RaRaRa =  `echo $line | awk -F "/" '{print $(NF-1)}'`
-		set RadecID = `echo $line | awk -F "/" '{print $(NF)}'`
-		
+		set RadecID = `echo $line`
+                set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`		
+
 		echo "RaRaRa == "$RaRaRa
 		echo "RadecID == "$RadecID
 	
