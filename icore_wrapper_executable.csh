@@ -442,6 +442,11 @@ foreach line (`cat $InputsList`)
 		set preworkINPUTdir = ${ParentDir}/UnWISE/${RaRaRa}/${RadecID}/
 		echo fbt3 and PSFavr8 Input Dir === $preworkINPUTdir
 		set preworkOUTPUTdir = ${ParentDir}/CatWISE/${RaRaRa}/${RadecID}/Full/
+		
+	
+		if(`mkdir -p ${preworkOUTPUTdir}/ProgramTerminalOutput/`) then
+			echo creating ${preworkOUTPUTdir}/ProgramTerminalOutput/
+		endif
 
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
