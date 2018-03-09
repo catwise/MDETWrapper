@@ -8,7 +8,7 @@ echo
 echo Wrapper Started at:
 echo $startTime
 echo
-echo Version 2.02 
+echo Version 2.03 
 echo
 echo This Wrapper will wrap around and run these 3 programs:
 echo 1\) fbt3 and PSFavr8
@@ -62,18 +62,18 @@ else if ($1 == 1) then
 	goto Mode1
 #Mode2 List of Tiles Mode
 else if ($1 == 2) then
-		set InputsList = $2
-        set OutputsDir = $3
+	set InputsList = $2
+        set ParentDir = $3
         echo Inputs list ==  $InputsList
-        echo Outputs directory == $OutputsDir
-		echo
-        echo "Is this the correct input list and output directory? (y/n)"
+        echo Parent directory == $ParentDir
+        echo
+        echo "Is this the correct input list and Parent directory? (y/n)"
         set userInput = $<
- 	
-	#Error handling
+
+    #Error handling
         #if user input dir wrong
         if($userInput != "Y" && $userInput != "y") then
-                echo Please execute program again with full Input List file as the 2nd parameter and the Ouput Directory path as your 3rd parameter
+                echo Please execute program again with full Input List file as the 2nd parameter and the Parent Directory path as your 3rd parameter
                 #TODO actually throw an error instead of just outputing to stdout... output to stderr
                 echo
                 echo Exiting...
@@ -86,8 +86,8 @@ else if ($1 == 2) then
                 echo Exiting...
                 exit
         endif
-        if (! -d $OutputsDir) then
-                echo ERROR: Output Directory $OutputsDir does not exist.
+        if (! -d $ParentDir) then
+                echo ERROR: Parent Directory $ParentDir does not exist.
                 echo
                 echo Exiting...
                 exit
@@ -206,24 +206,24 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo
 	        echo Deleting any PSFs if they exist...	
 		#if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
-			rm -f ${preworkOUTPUTdir}/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}. Deleting...
+			#rm -f ${preworkOUTPUTdir}/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}. Deleting...
 		#else if ( `find ${preworkOUTPUTdir}/Asce/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
-			rm -f ${preworkOUTPUTdir}/Asce/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}/Asce/. Deleting...
+			#rm -f ${preworkOUTPUTdir}/Asce/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}/Asce/. Deleting...
 		#else if ( `find ${preworkOUTPUTdir}/Desc/ -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
-			rm -f ${preworkOUTPUTdir}/Desc/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}/Desc/. Deleting...
+			#rm -f ${preworkOUTPUTdir}/Desc/*psf* || true &&  echo PSFs found in ${preworkOUTPUTdir}/Desc/. Deleting...
 		#endif
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt &
+		/Volumes/CatWISE1/CatWISEDev/ftb3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
+		/Volumes/CatWISE1/CatWISEDev/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt &
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
+		/Volumes/CatWISE1/CatWISEDev/PSFavr8 -i /Volumes/CatWISE1/CatWISEDev/Focal_Plane_PSFs/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
@@ -406,7 +406,7 @@ echo Wrapper now starting...
 echo
 echo
 
-echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in $OutputsDir"
+echo "NOTE: fbt3 and PSFavr8 will delete any existing PSFs you have in ${ParentDir}/CatWISE"
 echo 
 echo "Do you want to run fbt3 and PSFavr8 (y/n)?"
 set userInput = $<
@@ -431,17 +431,17 @@ foreach line (`cat $InputsList`)
 	
 		echo =============================== start fbt3 and PSFavr8  wrapper loop iteration =================================
  
-		set RaRaRa =  `echo $line | awk -F "/" '{print $(NF-1)}'`
-		set RadecID = `echo $line | awk -F "/" '{print $(NF)}'`
-		
+		set RadecID = `echo $line`
+	        set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
+	
 		echo "RaRaRa == "$RaRaRa
 		echo "RadecID == "$RadecID
 
 		echo "--------------------------------------- start fbt3 and PSFavr8 wrapper ---------------------------------------"
 		
-		set preworkINPUTdir = $line
+		set preworkINPUTdir = ${ParentDir}/UnWISE/${RaRaRa}/${RadecID}/
 		echo fbt3 and PSFavr8 Input Dir === $preworkINPUTdir
-		set preworkOUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		set preworkOUTPUTdir = ${ParentDir}/CatWISE/${RaRaRa}/${RadecID}/Full/
 
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
@@ -455,19 +455,6 @@ foreach line (`cat $InputsList`)
                         echo Creating directory ${preworkOUTPUTdir}/Desc...
                 endif
 		#removes any existing psfs
-#		if (`ls ${preworkOUTPUTdir}*psf* >& /dev/null`)  then
-#			echo PSFs exist in ${preworkOUTPUTdir} 
-#			echo Deleting PSF files now...
-#			rm -f ${preworkOUTPUTdir}*psf*               
-#		else if (`ls ${preworkOUTPUTdir}/Asce/*psf* >& /dev/null`) then 
-#			echo PSFs exist in ${preworkOUTPUTdir}/Asce/ 
-#			echo Deleting PSF files now...
-#			rm -f ${preworkOUTPUTdir}/Asce/*psf*
-#		else if (`ls ${preworkOUTPUTdir}/Desc/*psf* >& /dev/null`) then 
-#			echo PSFs exist in ${preworkOUTPUTdir}/Desc/ 
-#			echo Deleting PSF files now...
-#			rm -f ${preworkOUTPUTdir}/Desc/*psf*
-#		endif
 		echo
 	        echo Deleting any PSFs if they exist...	
 		if ( `find ${preworkOUTPUTdir} -maxdepth 1 -type f -name "*psf*" | wc -l` > 0 ) then
@@ -483,15 +470,15 @@ foreach line (`cat $InputsList`)
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt &
+		/Volumes/CatWISE1/CatWISEDev/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
+		/Volumes/CatWISE1/CatWISEDev/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt &
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
+		/Volumes/CatWISE1/CatWISEDev/PSFavr8 -i /Volumes/CatWISE1/CatWISEDev/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
@@ -536,8 +523,8 @@ foreach line (`cat $InputsList`)
 		
 		echo "-------------------------------------------- start ICORE wrapper ---------------------------------------------"
 		
-		set inputdir = $line
-		set OUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		set inputdir = ${ParentDir}/UnWISE/${RaRaRa}/${RadecID}/
+		set OUTPUTdir = ${ParentDir}/CatWISE/${RaRaRa}/${RadecID}/Full/
 		
 		echo Current Input Directory === $line
 		echo Current Output Directory === $OUTPUTdir
@@ -611,7 +598,7 @@ foreach line (`cat $InputsList`)
 	
 		echo "--------------------------------------------- start MDET wrapper ---------------------------------------------"
 		
-		set MDETInputdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
+		set MDETInputdir = ${ParentDir}/CatWISE/${RaRaRa}/${RadecID}/Full/
 		echo MDET Input Dir === $MDETInputdir
 		
 		echo calling MDET on ${RadecID} tile
@@ -733,15 +720,15 @@ echo 1\) fbt3 and PSFavr8 programs now starting...
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt
-		/Volumes/CatWISE1/jwf/src/fbt3/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt
+		/Volumes/CatWISE1/CatWISEDev/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt
+		/Volumes/CatWISE1/CatWISEDev/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
 		    exit
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/jwf/src/PSFavr8/PSFavr8 -i /Volumes/CatWISE1/jwf/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da 
+		/Volumes/CatWISE1/CatWISEDev/PSFavr8 -i /Volumes/CatWISE1/CatWISEDev/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da 
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
