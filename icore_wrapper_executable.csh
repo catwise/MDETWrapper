@@ -191,6 +191,10 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 		echo fbt3 and PSFavr8 Input Dir === $preworkINPUTdir
 		set preworkOUTPUTdir = ${OutputsDir}/${RaRaRa}/${RadecID}/Full/
 
+		if(`mkdir -p ${preworkOUTPUTdir}/ProgramTerminalOutput/`) then
+                        echo creating ${preworkOUTPUTdir}/ProgramTerminalOutput/
+                endif
+
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
 		if(`mkdir -p ${preworkOUTPUTdir}`) then
@@ -215,7 +219,7 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
 
 
 		# fbt3 call
-		/Volumes/CatWISE1/CatWISEDev/ftb3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
+		/Volumes/CatWISE1/CatWISEDev/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w1-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt &
 		/Volumes/CatWISE1/CatWISEDev/fbt3 ${preworkINPUTdir}/unwise-${RadecID}-w2-frames.fits ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt &
 	        if ($status != 0) then
 		    echo fbt3 failed with an exit status of $status. Exiting...
@@ -223,7 +227,7 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
                 endif	    
 		wait
 		#PSFavr8
-		/Volumes/CatWISE1/CatWISEDev/PSFavr8 -i /Volumes/CatWISE1/CatWISEDev/Focal_Plane_PSFs/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
+		/Volumes/CatWISE1/CatWISEDev/PSFavr8 -i /Volumes/CatWISE1/CatWISEDev/Focal_Plane_PSFs -o $preworkOUTPUTdir -a1 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt -a2 ${preworkOUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt -t $RadecID -da &
 	        if ($status != 0) then
 		    echo PSFavr8 failed with an exit status of $status. Exiting...
 		    exit
@@ -697,6 +701,10 @@ echo 1\) fbt3 and PSFavr8 programs now starting...
 		set preworkINPUTdir = ${UnWISEDir}
 		echo fbt3 and PSFavr8 Input Dir === $preworkINPUTdir
 		set preworkOUTPUTdir = ${CatWISEDir}
+
+		if(`mkdir -p ${preworkOUTPUTdir}/ProgramTerminalOutput/`) then
+                        echo creating ${preworkOUTPUTdir}/ProgramTerminalOutput/
+                endif
 
 		echo calling fbt3 and PSFavr8 on ${RadecID} tile
 		
