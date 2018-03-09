@@ -14,23 +14,25 @@ echo This Wrapper will wrap around and run these 3 programs:
 echo 1\) fbt3 and PSFavr8
 echo 2\) ICORE
 echo 3\) MDET
-
-if ($# != 3) then
-	#Error handling
-	#Too many or too little arguments	
-	echo "ERROR: not enough arguments:"
-	echo "Parameters for wrapper must be in the order:"
-	echo 1\) Mode 1 2 or 3 \(1 == Input directory, 2 == Input listof Tiles, 2 == Single Tile\)
-	echo 2\) Input directory or list or Parent Directory
-	echo 3\) Output directory or Tile Name
-	echo "i.e. './icore_wrapper_executable.csh option InputDir/List OutputDir'" 
-	echo 
-	echo Exiting...
-	exit 
-#Mode1 Everything Mode
-else if ($1 == 1) then
-	set InputsDir = $2
-	set OutputsDir = $3
+if ($# != 2 && $# != 3) then
+        #Error handling
+        #Too many or too little arguments
+        echo ""
+        echo "ERROR: not enough arguments:"
+        echo Mode 1 call:
+        echo ./icore_wrapper_executable_opt1.tcsh 1 ParentDir/
+        echo Mode 2 call:
+        echo ./icore_wrapper_executable_opt1.tcsh 2 inputList.txt ParentDir/
+        echo Mode 3 call:
+        echo ./icore_wrapper_executable_opt1.tcsh 3 ParentDir/ TileName
+        echo
+        echo Exiting...
+        exit
+#Mode1
+else if ($# == 2 && $1 == 1) then
+        set ParentDir = $2
+	set InputsDir = ${ParentDir}/UnWISE/
+	set OutputsDir = ${ParentDir}/CatWISE/
 	echo Inputs directory ==  $InputsDir
 	echo Outputs directory == $OutputsDir
 	echo "Are these the correct input and output directories? (y/n)"
@@ -113,6 +115,7 @@ else if ($1 == 3) then
         endif
         #if directories dont exist, throw error
         if(! -d $ParentDir) then
+		echo
                 echo ERROR: $ParentDir doest not exist.
                 echo
                 echo Exiting...
@@ -123,8 +126,15 @@ echo "going to Mode3"
 else
 	#Error handling
 	#mode 1/2 not second parameter. program exits.
-	echo ERROR mode 1, 2, or 3 not selected
+	echo ERROR: mode 1, 2, or 3 not selected
 	echo
+        echo Mode 1 call:
+        echo ./icore_wrapper_executable_opt1.tcsh 1 ParentDir/
+        echo Mode 2 call:
+        echo ./icore_wrapper_executable_opt1.tcsh 2 inputList.txt ParentDir/
+        echo Mode 3 call:
+        echo ./icore_wrapper_executable_opt1.tcsh 3 ParentDir/ TileName
+        echo
 	echo Exiting...
 	exit
 endif
