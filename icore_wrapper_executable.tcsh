@@ -8,7 +8,7 @@ echo
 echo Wrapper Started at:
 echo $startTime
 echo
-echo Version 2.05 
+echo Version 2.08 
 echo
 echo This Wrapper will wrap around and run these 3 programs:
 echo 1\) fbt3 and PSFavr8
@@ -231,7 +231,13 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
                 echo RaRaRa == $RaRaRa
 
 		echo calling mdet wrapper mode 3 on $RadecID
-                (echo y |  ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+		
+		#call icore_wrapper
+                if($rsyncSet == "true") then
+                        (echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -rsync -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+                else
+                        (echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+                endif
 
                 if(`ps -ef | grep icore_wrapper_executable | wc -l` > 14) then
                         echo ${RadecID} More than 12 icore_wrapper_executable processes, waiting...
@@ -257,66 +263,6 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
     #wait for background processes to finish
     wait
     echo wphot wrapper finished!
-#rsync loop
-foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
-
-	foreach RadecIDDir ($RaRaRaDir*/)
-
-                set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
-                @ tempIndex = ($tempSize - 8)
-                set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
-                set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
-                set UnWISEDir = $ParentDir/UnWISE/$RaRaRa/$RadecID/
-                set CatWISEDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/Full/
-		set OUTPUTdir = ${CatWISEDir}
-                set TileDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/
-                echo RadecID == $RadecID
-                echo RaRaRa == $RaRaRa
-
-	if($rsyncSet == "true") then
-	#rsync
-	echo running rsync on tile $RadecID
-        set currIP = `curl ipecho.net/plain ; echo`
-        echo current IP = $currIP
-        if($currIP == "137.78.30.21") then #Tyto
-                set otus_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/otus1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/athene1/g'`
-                echo On Tyto!
-                
-               #Transfer to Otus
-		ssh ${user}@137.78.80.75 "mkdir -p $otus_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Otus $otus_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.75:$otus_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Otus $otus_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
-               #Transfer to Athene
-		ssh ${user}@137.78.80.72 "mkdir -p $athene_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Athene $athene_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.72:$athene_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Athene $athene_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
-        else if($currIP == "137.78.80.75") then  #Otus
-                set tyto_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/tyto1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/athene1/g'`
-                echo On Otus!
-
-                #transfer to Tyto
-                echo rsync Otus\'s $CatWISEDir to Tyto
-                #transfer to Athene
-                echo rsync Otus\'s $CatWISEDir to Athene
-        else if($currIP == "137.78.80.72") then #Athene
-                echo On Athene!
-
-                #transfer to Tyto
-                echo rsync Athene\'s $CatWISEDir to Tyto
-                #transfer to Otus
-                echo rsync Athene\'s $CatWISEDir to Otus
-        endif
-	endif
-  end
-end
-
-
     echo
     goto Done
 
@@ -343,7 +289,12 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
                 echo RadecID == $RadecID
                 echo RaRaRa == $RaRaRa
 
-                (echo n | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+		#call icore_wrapper
+                if($rsyncSet == "true") then
+                        (echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -rsync -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+                else
+                        (echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+                endif		
 
                 if(`ps -ef | grep icore_wrapper_executable | wc -l` > 14) then
                         echo ${RadecID} More than 12 icore_wrapper_executable processes, waiting...
@@ -368,66 +319,6 @@ foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get eac
     #wait for background processes to finish
     wait
     echo wphot wrapper finished!
-
-#rsync loop
-foreach RaRaRaDir ($FulldepthDir*/) #for each directory in FulldepthDir, get each RadecIDdir, run wrapper on RadecID tile
-
-	foreach RadecIDDir ($RaRaRaDir*/)
-
-                set tempSize = `echo $RadecIDDir  | awk '{print length($0)}'`
-                @ tempIndex = ($tempSize - 8)
-                set RadecID = `echo $RadecIDDir | awk -v startIndex=$tempIndex '{print substr($0,startIndex,8)}'`
-                set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
-                set UnWISEDir = $ParentDir/UnWISE/$RaRaRa/$RadecID/
-                set CatWISEDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/Full/
-		set OUTPUTdir = ${CatWISEDir}
-                set TileDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/
-                echo RadecID == $RadecID
-                echo RaRaRa == $RaRaRa
-
-	if($rsyncSet == "true") then
-	#rsync
-	echo running rsync on tile $RadecID
-        set currIP = `curl ipecho.net/plain ; echo`
-        echo current IP = $currIP
-        if($currIP == "137.78.30.21") then #Tyto
-                set otus_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/otus1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/athene1/g'`
-                echo On Tyto!
-                
-               #Transfer to Otus
-		ssh ${user}@137.78.80.75 "mkdir -p $otus_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Otus $otus_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.75:$otus_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Otus $otus_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
-               #Transfer to Athene
-		ssh ${user}@137.78.80.72 "mkdir -p $athene_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Athene $athene_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.72:$athene_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Athene $athene_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
-        else if($currIP == "137.78.80.75") then  #Otus
-                set tyto_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/tyto1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/athene1/g'`
-                echo On Otus!
-
-                #transfer to Tyto
-                echo rsync Otus\'s $CatWISEDir to Tyto
-                #transfer to Athene
-                echo rsync Otus\'s $CatWISEDir to Athene
-        else if($currIP == "137.78.80.72") then #Athene
-                echo On Athene!
-
-                #transfer to Tyto
-                echo rsync Athene\'s $CatWISEDir to Tyto
-                #transfer to Otus
-                echo rsync Athene\'s $CatWISEDir to Otus
-        endif
-	endif
-  end
-end
-
     echo
     goto Done
 
@@ -472,7 +363,12 @@ foreach line (`cat $InputsList`)
                 echo RadecID == $RadecID
                 echo RaRaRa == $RaRaRa
 
-                (echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+		#call icore_wrapper
+		if($rsyncSet == "true") then
+                	(echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -rsync -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+		else 
+                	(echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+		endif
 
                 if(`ps -ef | grep icore_wrapper_executable | wc -l` > 14) then
                         echo ${RadecID} More than 12 icore_wrapper_executable processes, waiting...
@@ -492,66 +388,6 @@ end
     #wait for background processes to finish
     wait
     echo wphot wrapper finished!
-    echo now performing rsync steps...
-#rsync loop
-foreach line (`cat $InputsList`)
-
-        	set RadecID = `echo $line`
-        	set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
-                set UnWISEDir = $ParentDir/UnWISE/$RaRaRa/$RadecID/
-                set CatWISEDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/Full/
-		set OUTPUTdir = ${CatWISEDir}
-                set TileDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/
-                echo RadecID == $RadecID
-                echo RaRaRa == $RaRaRa
-
-	if($rsyncSet == "true") then
-	#rsync
-	echo running rsync on tile $RadecID
-        set currIP = `curl ipecho.net/plain ; echo`
-        echo current IP = $currIP
-        if($currIP == "137.78.30.21") then #Tyto
-                set otus_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/otus1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/athene1/g'`
-                echo On Tyto!
-                
-               #Transfer to Otus
-		ssh ${user}@137.78.80.75 "mkdir -p $otus_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Otus $otus_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.75:$otus_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Otus $otus_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
-               #Transfer to Athene
-		ssh ${user}@137.78.80.72 "mkdir -p $athene_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Athene $athene_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.72:$athene_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Athene $athene_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
-        else if($currIP == "137.78.80.75") then  #Otus
-                set tyto_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/tyto1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/athene1/g'`
-                echo On Otus!
-
-                #transfer to Tyto
-                echo rsync Otus\'s $CatWISEDir to Tyto
-                #transfer to Athene
-                echo rsync Otus\'s $CatWISEDir to Athene
-        else if($currIP == "137.78.80.72") then #Athene
-                echo On Athene!
-
-                #transfer to Tyto
-                echo rsync Athene\'s $CatWISEDir to Tyto
-                #transfer to Otus
-                echo rsync Athene\'s $CatWISEDir to Otus
-        endif
-	endif
-
-end
-
-
-#===============================================================================================================================================================
-
-    echo finished rsync, done!
     echo
     goto Done
 
@@ -570,7 +406,12 @@ foreach line (`cat $InputsList`)
                 echo RadecID == $RadecID
                 echo RaRaRa == $RaRaRa
 
-                (echo n | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+		#call icore_wrapper
+                if($rsyncSet == "true") then
+                        (echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -rsync -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+                else
+                        (echo y | ./icore_wrapper_executable.tcsh 3 $ParentDir $RadecID -SNR $SNRthreshold -p) &  #&& (echo Wrapper Call for ${RadecID} success!)
+                endif
                 
 		if(`ps -ef | grep icore_wrapper_executable | wc -l` > 14) then
                         echo ${RadecID} More than 12 icore_wrapper_executable processes, waiting...
@@ -589,63 +430,6 @@ end
     #wait for background processes to finish
     wait
     echo wphot wrapper finished!
-#rsync loop
-foreach line (`cat $InputsList`)
-
-        	set RadecID = `echo $line`
-        	set RaRaRa = `echo $RadecID | awk '{print substr($0,0,3)}'`
-                set UnWISEDir = $ParentDir/UnWISE/$RaRaRa/$RadecID/
-                set CatWISEDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/Full/
-		set OUTPUTdir = ${CatWISEDir}
-                set TileDir = $ParentDir/CatWISE/$RaRaRa/$RadecID/
-                echo RadecID == $RadecID
-                echo RaRaRa == $RaRaRa
-
-	if($rsyncSet == "true") then
-	#rsync
-	echo running rsync on tile $RadecID
-        set currIP = `curl ipecho.net/plain ; echo`
-        echo current IP = $currIP
-        if($currIP == "137.78.30.21") then #Tyto
-                set otus_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/otus1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/athene1/g'`
-                echo On Tyto!
-                
-               #Transfer to Otus
-		ssh ${user}@137.78.80.75 "mkdir -p $otus_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Otus $otus_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.75:$otus_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Otus $otus_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
-               #Transfer to Athene
-		ssh ${user}@137.78.80.72 "mkdir -p $athene_CatWISEDir"
-                echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Athene $athene_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.72:$athene_CatWISEDir
-                echo rsync Tyto\'s $CatWISEDir psfs to Athene $athene_CatWISEDir
-                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
-        else if($currIP == "137.78.80.75") then  #Otus
-                set tyto_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/tyto1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/athene1/g'`
-                echo On Otus!
-
-                #transfer to Tyto
-                echo rsync Otus\'s $CatWISEDir to Tyto
-                #transfer to Athene
-                echo rsync Otus\'s $CatWISEDir to Athene
-        else if($currIP == "137.78.80.72") then #Athene
-                echo On Athene!
-
-                #transfer to Tyto
-                echo rsync Athene\'s $CatWISEDir to Tyto
-                #transfer to Otus
-                echo rsync Athene\'s $CatWISEDir to Otus
-        endif
-	endif
-
-end
-
-#===============================================================================================================================================================
-
     echo
     goto Done
 
@@ -828,6 +612,11 @@ echo 3\) MDET program now starting...
 
 		# MDET call
 		(${wrapperDir}/mdet -image1 ${MDETInputdir}/mosaic-w1-int.fits -image2 ${MDETInputdir}/mosaic-w2-int.fits -sigimage1 ${MDETInputdir}/mosaic-w1-unc.fits -sigimage2 ${MDETInputdir}/mosaic-w2-unc.fits -backwindow 400.0 -threshold $SNRthreshold -m -c -outlist ${MDETInputdir}/detlist.tbl -fwhm1 6.000 -fwhm2 6.000 >& ${MDETInputdir}/ProgramTerminalOutput/mdet_output.txt)
+	
+		set date_t = `date +"%Y%m%d%H%M%S"`
+		cp ${MDETInputdir}/detlist.tbl ${MDETInputdir}/detlist_${RadecID}_${date_t}.tbl
+		
+
 	        if ($status != 0) then
 		    echo ERROR: mdet failed with an exit status of $status. Exiting...
 		    exit 
@@ -837,52 +626,88 @@ echo 3\) MDET program now starting...
 		
 		echo "---------------------------------------------- end MDET wrapper ----------------------------------------------"
 #===============================================================================================================================================================
-	#rsync folders from Tyto, Athene, Otus
-	
-	#TORSYNC
-	#sync the detlist*****
-	#sync the psf's (?) 
-
+       #rsync folders from Tyto, Athene, Otus
 #===============================================================================================================================================================
+       #Deletes and cleans up files
+	cd $wrapperDir
+	echo Deleting Wrapper temp files...
+       #Deletes 2 scripts
+	rm -f ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w1
+	rm -f ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2
+	#rm ./icore_coadd_w1--follow-symlinks
+	rm -f ${OUTPUTdir}/ProgramTerminalOutput/icore_coadd_w2--follow-symlinks
+	rm -f ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w1.txt
+	rm -f ${OUTPUTdir}/ProgramTerminalOutput/fbt3_w2.txt
+	echo Done deleting!
 
 	if($rsyncSet == "true") then
-	#rsync
+       #rsync
 	echo running rsync on tile $RadecID
         set currIP = `curl ipecho.net/plain ; echo`
         echo current IP = $currIP
         if($currIP == "137.78.30.21") then #Tyto
                 set otus_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/otus1/g'`
                 set athene_CatWISEDir = `echo $CatWISEDir | sed 's/CatWISE1/athene1/g'`
+                set otus_CatWISEDir = `echo $otus_CatWISEDir | sed 's/tyto/otus/g'`
+                set athene_CatWISEDir = `echo $athene_CatWISEDir | sed 's/tyto/athene/g'`
+                set otus_CatWISEDir = `echo $otus_CatWISEDir | sed 's/CatWISE3/otus3/g'`
+                set athene_CatWISEDir = `echo $athene_CatWISEDir | sed 's/CatWISE3/athene3/g'`
                 echo On Tyto!
                 
                #Transfer to Otus
-		ssh ${user}@137.78.80.75 "mkdir -p $otus_CatWISEDir"
                 echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Otus $otus_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.75:$otus_CatWISEDir
+		ssh ${user}@137.78.80.75 "mkdir -p $otus_CatWISEDir"
+                rsync -avu  --include "detlist" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
                 echo rsync Tyto\'s $CatWISEDir psfs to Otus $otus_CatWISEDir
                 rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
-               #Transfer to Athene
-		ssh ${user}@137.78.80.72 "mkdir -p $athene_CatWISEDir"
+               
+	       #Transfer to Athene
                 echo rsync Tyto\'s $CatWISEDir/detlist.tbl to Athene $athene_CatWISEDir
-                rsync -avu  $CatWISEDir/detlist.tbl ${user}@137.78.80.72:$athene_CatWISEDir
+		ssh ${user}@137.78.80.72 "mkdir -p $athene_CatWISEDir"
+                rsync -avu  --include "detlist" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
                 echo rsync Tyto\'s $CatWISEDir psfs to Athene $athene_CatWISEDir
                 rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
         else if($currIP == "137.78.80.75") then  #Otus
-                set tyto_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/tyto1/g'`
-                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/otus1/athene1/g'`
+                set tyto_CatWISEDir = `echo $CatWISEDir | sed 's/otus3/CatWISE3/g'`
+                set tyto_CatWISEDir = `echo $tyto_CatWISEDir | sed 's/otus/tyto/g'`
+                set athene_CatWISEDir = `echo $CatWISEDir | sed 's/otus/athene/g'`
                 echo On Otus!
 
-                #transfer to Tyto
-                echo rsync Otus\'s $CatWISEDir to Tyto
-                #transfer to Athene
-                echo rsync Otus\'s $CatWISEDir to Athene
+               #Transfer to Tyto
+		ssh ${user}@137.78.30.21 "mkdir -p $tyto_CatWISEDir"
+                echo rsync Otus\'s $CatWISEDir/detlist.tbl to Tyto $tyto_CatWISEDir
+                rsync -avu  --include "detlist" $CatWISEDir ${user}@137.78.30.21:$tyto_CatWISEDir
+                echo rsync Otus\'s $CatWISEDir psfs to Tyto $tyto_CatWISEDir
+                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.30.21:$tyto_CatWISEDir
+               
+	       #Transfer to Athene
+		ssh ${user}@137.78.80.72 "mkdir -p $athene_CatWISEDir"
+                echo rsync Otus\'s $CatWISEDir/detlist.tbl to Athene $athene_CatWISEDir
+                rsync -avu  --include "detlist" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
+                echo rsync Otus\'s $CatWISEDir psfs to Athene $athene_CatWISEDir
+                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.72:$athene_CatWISEDir
         else if($currIP == "137.78.80.72") then #Athene
+                set tyto_CatWISEDir = `echo $CatWISEDir | sed 's/athene3/CatWISE3/g'`
+                set tyto_CatWISEDir = `echo $tyto_CatWISEDir | sed 's/athene/tyto/g'`
+                set otus_CatWISEDir = `echo $CatWISEDir | sed 's/athene/otus/g'`
                 echo On Athene!
 
-                #transfer to Tyto
-                echo rsync Athene\'s $CatWISEDir to Tyto
-                #transfer to Otus
-                echo rsync Athene\'s $CatWISEDir to Otus
+		
+
+
+               #Transfer to Tyto
+		ssh ${user}@137.78.30.21 "mkdir -p $tyto_CatWISEDir"
+                echo rsync Athene\'s $CatWISEDir/detlist.tbl to Tyto $tyto_CatWISEDir
+                rsync -avu --include "detlist" $CatWISEDir ${user}@137.78.30.21:$tyto_CatWISEDir
+                echo rsync Athene\'s $CatWISEDir psfs to Tyto $tyto_CatWISEDir
+                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.30.21:$tyto_CatWISEDir
+               
+	       #Transfer to Otus
+		ssh ${user}@137.78.80.75 "mkdir -p $otus_CatWISEDir"
+                echo rsync Athene\'s $CatWISEDir/detlist.tbl to Otus $otus_CatWISEDir
+                rsync -avu --include "detlist" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
+                echo rsync Athene\'s $CatWISEDir psfs to Otus $otus_CatWISEDir
+                rsync -avu  --include "psf" $CatWISEDir ${user}@137.78.80.75:$otus_CatWISEDir
         endif
 	endif
 
@@ -891,11 +716,6 @@ echo 3\) MDET program now starting...
 	goto Done
 
 Done:		
-# Deletes and cleans up files
-cd $wrapperDir
-echo Deleting Wrapper temp files...
-source icore_cleanup_wrapper.tcsh
-echo Done deleting!
 
 
 #===============================================================================================================================================================
