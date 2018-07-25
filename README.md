@@ -15,5 +15,5 @@ TODO
 	* **./icore\_wrapper\_executable** 2 \<ParentDirectory\> \<TileList\>
 * Mode 3: Single-Tile Mode
 	* Run tile given in command line input. The input TileName should be a RaDecID (eg 3568m182)
-	* **./icore\_wrapper\_executable** 1 \<ParentDirectory\> \<TileName\>
+	* **./icore\_wrapper\_executable** 3 \<ParentDirectory\> \<TileName\>
 
