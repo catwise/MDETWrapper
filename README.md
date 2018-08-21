@@ -17,3 +17,6 @@ TODO
 	* Run tile given in command line input. The input TileName should be a RaDecID (eg 3568m182)
 	* **./icore\_wrapper\_executable** 3 \<ParentDirectory\> \<TileName\>
 
+## Arguments
+\-SNR \<SNRvalue\>
+\-rsync
